@@ -15,6 +15,11 @@ interface Ship {
   company_id: number;
 }
 
+interface FormData {
+  country_id: number;
+  ship_id: number;
+}
+
 interface OrderUploadFormProps {
   onClose: () => void;
   onSuccess: () => void;
@@ -24,9 +29,9 @@ export default function OrderUploadForm({ onClose, onSuccess }: OrderUploadFormP
   const [countries, setCountries] = useState<Country[]>([]);
   const [ships, setShips] = useState<Ship[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    country_id: '',
-    ship_id: '',
+  const [formData, setFormData] = useState<FormData>({
+    country_id: 0,
+    ship_id: 0,
   });
 
   useEffect(() => {

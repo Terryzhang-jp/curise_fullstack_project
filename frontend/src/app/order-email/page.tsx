@@ -85,7 +85,7 @@ export default function OrderEmailPage() {
         setSuppliers(selectedSuppliers);
         // 初始化供应商状态
         setSupplierStatuses(
-          selectedSuppliers.map(s => ({ id: s.id, status: 'pending' }))
+          selectedSuppliers.map((s: Supplier) => ({ id: s.id, status: 'pending' as const }))
         );
         // 选择第一个供应商
         if (selectedSuppliers.length > 0) {

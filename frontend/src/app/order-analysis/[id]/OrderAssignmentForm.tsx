@@ -34,13 +34,17 @@ interface OrderAssignmentFormProps {
   onSuccess: () => void;
 }
 
+interface Assignments {
+  [key: number]: {
+    quantity: number;
+    unit_price: number;
+  };
+}
+
 export default function OrderAssignmentForm({ items, onClose, onSuccess }: OrderAssignmentFormProps) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null);
-  const [assignments, setAssignments] = useState<{[key: number]: {
-    quantity: number;
-    unit_price: number;
-  }>>(
+  const [assignments, setAssignments] = useState<Assignments>(() =>
     Object.fromEntries(
       items.map(item => [
         item.id,

@@ -272,13 +272,14 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
                 <h3 className="text-lg font-semibold">编辑产品</h3>
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   onClick={() => {
                     setShowEditForm(false);
                     setEditingProduct(null);
                   }}
+                  className="h-8 w-8 p-0"
                 >
-                  <XMarkIcon className="h-5 w-5" />
+                  <XMarkIcon className="h-4 w-4" />
                 </Button>
               </div>
 
