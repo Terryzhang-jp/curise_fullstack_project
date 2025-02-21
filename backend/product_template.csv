@@ -1,0 +1,4 @@
+name,code,category_id,country_id,unit,price,status,effective_from,effective_to
+蛋类产品 209g 品牌A,01-001,1,1,个,531.75,false,2025-02-07 09:39:23,
+蛋类产品 918g 品牌B,01-002,1,3,kg,784.60,true,2025-02-07 09:39:23,
+蛋类产品 556g 品牌C,01-003,1,1,ml,158.76,true,2025-02-07 09:39:23,
