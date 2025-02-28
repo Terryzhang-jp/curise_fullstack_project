@@ -1,8 +1,0 @@
----
-description: check path and env
-globs: 
----
-
-# Your rule content
-
-Before running any command, you need to check where we are, current path and if you are running python, you need to check whether we have activate the corrent virtual env.
