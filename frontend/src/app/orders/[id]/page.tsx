@@ -70,6 +70,13 @@ export default function OrderDetailPage() {
         throw new Error('获取订单详情失败');
       }
       const data = await response.json();
+      console.log('获取到的订单数据:', data);
+      console.log('订单项目数量:', data.order_items ? data.order_items.length : 0);
+      if (data.order_items) {
+        data.order_items.forEach((item: OrderItem, index: number) => {
+          console.log(`订单项目 #${index+1}:`, item);
+        });
+      }
       setOrder(data);
     } catch (error) {
       console.error('Error fetching order:', error);
@@ -126,44 +133,50 @@ export default function OrderDetailPage() {
     }
   };
 
-  const handleAddToProcessing = () => {
-    if (selectedItems.size === 0) {
+  const handleAddToProcessing = async () => {
+    if (selectedItems.size === 0 || !order) {
       alert('请先选择要处理的订单项目');
       return;
     }
 
-    // 获取已有的待处理项目
-    let existingItems: OrderItem[] = [];
-    const existingItemsStr = localStorage.getItem('processingItems');
-    if (existingItemsStr) {
-      try {
-        existingItems = JSON.parse(existingItemsStr);
-      } catch (error) {
-        console.error('解析已有待处理项目失败:', error);
+    setIsLoading(true);
+    try {
+      const itemIds = Array.from(selectedItems);
+      // 获取认证令牌
+      const token = localStorage.getItem('token');
+      
+      // 调试：打印token和请求数据
+      console.log('Debug - Token:', token ? 'Token exists' : 'No token');
+      console.log('Debug - itemIds:', itemIds);
+      console.log('Debug - JSON body:', JSON.stringify(itemIds));
+      
+      const response = await fetch('http://localhost:8000/api/v1/order-processing/add-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 添加认证头
+        },
+        body: JSON.stringify(itemIds), // 直接发送数组，不要包装在对象中
+        // 由于已经手动添加了认证头，可以移除credentials，避免重复认证
+        // credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || '添加到处理队列失败');
       }
+
+      const result = await response.json();
+      alert(`成功添加 ${result.length} 个项目到待处理列表`);
+      
+      // 清空选择
+      setSelectedItems(new Set());
+    } catch (error: any) {
+      console.error('添加到处理队列失败:', error);
+      alert('添加到处理队列失败: ' + (error.message || '未知错误'));
+    } finally {
+      setIsLoading(false);
     }
-
-    // 获取新选中的项目
-    const newItems = order?.order_items?.filter(item => selectedItems.has(item.id)) || [];
-
-    // 合并项目,避免重复
-    const mergedItems = [...existingItems];
-    newItems.forEach(newItem => {
-      // 检查是否已存在相同ID的项目
-      const exists = mergedItems.some(item => item.id === newItem.id);
-      if (!exists) {
-        mergedItems.push(newItem);
-      }
-    });
-    
-    // 保存合并后的项目列表
-    localStorage.setItem('processingItems', JSON.stringify(mergedItems));
-    
-    // 提示用户添加成功
-    alert(`成功添加 ${newItems.length} 个项目到待处理列表`);
-    
-    // 清空选择
-    setSelectedItems(new Set());
   };
 
   if (isLoading) {

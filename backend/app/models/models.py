@@ -4,6 +4,19 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from app.db.base_class import Base
 
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(100), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    full_name = Column(String(100))
+    role = Column(String(20), default="user")  # superadmin, admin, user
+    is_active = Column(Boolean, default=True)
+    is_superuser = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 class Country(Base):
     __tablename__ = "countries"
     
@@ -151,7 +164,7 @@ class Order(Base):
     port_id = Column(Integer, ForeignKey("ports.id"))
     order_date = Column(DateTime, nullable=False)
     delivery_date = Column(DateTime)
-    status = Column(String(20), default="pending")
+    status = Column(String(20), default="not_started")  # not_started, partially_processed, fully_processed
     total_amount = Column(Numeric(10, 2), default=0)
     notes = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -173,7 +186,7 @@ class OrderItem(Base):
     quantity = Column(Numeric(10, 2))
     price = Column(Numeric(10, 2))
     total = Column(Numeric(10, 2))
-    status = Column(String(20), default="pending")
+    status = Column(String(20), default="unprocessed")  # unprocessed, processed
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -379,4 +392,27 @@ class ProductHistory(Base):
     product = relationship("Product", back_populates="history")
     category = relationship("Category")
     country = relationship("Country")
-    supplier = relationship("Supplier") 
+    supplier = relationship("Supplier")
+
+class OrderProcessingItem(Base):
+    __tablename__ = "order_processing_items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    order_item_id = Column(Integer, ForeignKey("order_items.id"), nullable=True)
+    order_no = Column(String(50))
+    ship_name = Column(String(100))
+    product_id = Column(Integer)
+    product_name = Column(String(100))
+    product_code = Column(String(50))
+    supplier_name = Column(String(100))
+    quantity = Column(Numeric(10, 2))
+    price = Column(Numeric(10, 2))
+    total = Column(Numeric(10, 2))
+    status = Column(String(20), default="pending")  # pending, processed
+    added_at = Column(DateTime, default=datetime.utcnow)
+    processed_at = Column(DateTime, nullable=True)
+    
+    # 关系
+    user = relationship("User", backref="processing_items")
+    order_item = relationship("OrderItem", backref="processing_entries") 

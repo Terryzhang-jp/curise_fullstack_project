@@ -13,7 +13,8 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         *,
         skip: int = 0,
         limit: int = 100,
-        status: Optional[str] = None
+        status: Optional[str] = None,
+        include_relations: bool = False
     ) -> List[Order]:
         try:
             logger = logging.getLogger(__name__)
@@ -21,13 +22,15 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
             query = db.query(self.model)
             
             # 加载关联数据
-            query = query.options(
-                joinedload(Order.ship),
-                joinedload(Order.company),
-                joinedload(Order.port),
-                joinedload(Order.order_items).joinedload(OrderItem.product),
-                joinedload(Order.order_items).joinedload(OrderItem.supplier)
-            )
+            if include_relations:
+                logger.info("加载关联数据")
+                query = query.options(
+                    joinedload(Order.ship),
+                    joinedload(Order.company),
+                    joinedload(Order.port),
+                    joinedload(Order.order_items).joinedload(OrderItem.product),
+                    joinedload(Order.order_items).joinedload(OrderItem.supplier)
+                )
 
             if status:
                 query = query.filter(self.model.status == status)
@@ -38,13 +41,14 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
             logger.info(f"查询完成，获取到 {len(result)} 条记录")
             
             # 记录订单项目信息
-            for order in result:
-                logger.info(f"订单 {order.order_no} 的项目数: {len(order.order_items)}")
-                for item in order.order_items:
-                    logger.info(f"订单项目: product_id={item.product_id}, "
-                              f"product_name={item.product.name if item.product else None}, "
-                              f"supplier_id={item.supplier_id}, "
-                              f"supplier_name={item.supplier.name if item.supplier else None}")
+            if include_relations:
+                for order in result:
+                    logger.info(f"订单 {order.order_no} 的项目数: {len(order.order_items)}")
+                    for item in order.order_items:
+                        logger.info(f"订单项目: product_id={item.product_id}, "
+                                f"product_name={item.product.name if item.product else None}, "
+                                f"supplier_id={item.supplier_id}, "
+                                f"supplier_name={item.supplier.name if item.supplier else None}")
             
             return result
         except Exception as e:
@@ -123,25 +127,28 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
             logger = logging.getLogger(__name__)
             logger.info(f"获取订单详情: id={id}")
             
-            # 修改查询以确保正确加载所有关联数据
-            order = db.query(self.model).filter(self.model.id == id).first()
+            # 修改查询以确保正确加载所有关联数据，使用joinedload预加载所有关联
+            order = db.query(self.model).options(
+                joinedload(Order.order_items).joinedload(OrderItem.product),
+                joinedload(Order.order_items).joinedload(OrderItem.supplier),
+                joinedload(Order.ship),
+                joinedload(Order.company),
+                joinedload(Order.port)
+            ).filter(self.model.id == id).first()
             
             if order:
-                # 手动加载关联数据
-                db.refresh(order, attribute_names=['order_items'])
-                for item in order.order_items:
-                    db.refresh(item, attribute_names=['product', 'supplier'])
-                
-                db.refresh(order, attribute_names=['ship', 'company', 'port'])
-                
-                logger.info(f"订单基本信息: {order.order_no}")
+                # 打印更多日志用于诊断
+                logger.info(f"订单基本信息: {order.order_no}, 状态: {order.status}")
                 logger.info(f"订单项目数量: {len(order.order_items) if order.order_items else 0}")
                 if order.order_items:
                     for item in order.order_items:
-                        logger.info(f"订单项目: product_id={item.product_id}, "
+                        logger.info(f"订单项目: id={item.id}, product_id={item.product_id}, "
                                   f"product_name={item.product.name if item.product else None}, "
                                   f"supplier_id={item.supplier_id}, "
-                                  f"supplier_name={item.supplier.name if item.supplier else None}")
+                                  f"supplier_name={item.supplier.name if item.supplier else None}, "
+                                  f"status={item.status}")
+                else:
+                    logger.warning("订单没有关联的订单项目")
             else:
                 logger.warning("未找到订单")
                 

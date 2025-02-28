@@ -61,6 +61,7 @@ export default function OrderCategoryProcessingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [categoryGroups, setCategoryGroups] = useState<CategoryGroup[]>([]);
+  const [dbProducts, setDbProducts] = useState<Map<number, ProductCategoryInfo>>(new Map());
 
   useEffect(() => {
     loadAndProcessOrders();
@@ -71,55 +72,95 @@ export default function OrderCategoryProcessingPage() {
       setLoading(true);
       setError(null);
 
-      // 从localStorage加载待处理订单
-      const items = localStorage.getItem('processingItems');
-      if (!items) {
-        router.push('/order-processing');
-        return;
+      // 从API获取处理队列数据，而不是从localStorage
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/v1/order-processing/items', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('获取处理队列数据失败');
       }
 
-      const orders: PendingOrder[] = JSON.parse(items);
+      const orders: PendingOrder[] = await response.json();
+      
       if (orders.length === 0) {
-        router.push('/order-processing');
+        setError('没有待处理的订单项');
+        setLoading(false);
         return;
       }
 
       // 获取产品分类信息
-      const productIds = orders.map(order => order.product_id).filter((id): id is number => id !== undefined);
+      const productIds = orders.map(order => order.product_id).filter((id): id is number => id !== undefined && id > 0);
+      
+      // 打印产品ID列表和订单项内容用于调试
+      console.log('订单项原始内容:', orders);
+      console.log('有效的产品ID列表:', productIds);
+      
+      // 检查是否有有效的产品ID
+      if (productIds.length === 0) {
+        console.error('没有有效的产品ID');
+        setError('订单项中没有有效的产品ID，但您仍然可以查看订单数据');
+        
+        // 即使没有有效的产品ID，也继续处理订单数据，只是不从API获取分类信息
+        const groupedOrders = new Map<number, CategoryGroup>();
+        
+        // 为所有订单创建一个"未分类"分组
+        groupedOrders.set(0, {
+          categoryId: 0,
+          categoryName: '未分类',
+          items: orders,
+          totalQuantity: orders.reduce((sum, order) => sum + (parseFloat(order.quantity.toString()) || 0), 0),
+          totalAmount: orders.reduce((sum, order) => sum + (parseFloat(order.total.toString()) || 0), 0)
+        });
+        
+        setCategoryGroups(Array.from(groupedOrders.values()));
+        setLoading(false);
+        return;
+      }
       
       // 构建查询参数
       const queryParams = new URLSearchParams();
       productIds.forEach(id => queryParams.append('product_ids', id.toString()));
       
-      console.log('Request URL:', `http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`);
+      console.log('请求URL:', `http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`);
+      console.log('产品ID列表:', productIds);
       
-      const response = await fetch(`http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`, {
+      const response2 = await fetch(`http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!response2.ok) {
+        const errorText = await response2.text();
         console.error('API Error:', errorText);
         throw new Error('获取产品分类信息失败');
       }
 
-      const categoryData = await response.json();
+      const categoryData = await response2.json();
       console.log('获取到的分类数据:', categoryData);
 
       // 创建产品ID到分类信息的映射
       const productCategoryMap = new Map<number, ProductCategoryInfo>(
         categoryData.map((item: ProductCategoryInfo) => [item.product_id, item])
       );
+      
+      // 保存数据库中的产品信息，用于左侧显示
+      setDbProducts(productCategoryMap);
 
       // 按分类组织订单项目
       const groupedOrders = new Map<number, CategoryGroup>();
 
       orders.forEach(order => {
         // 从映射中获取产品的分类信息
-        const productInfo = productCategoryMap.get(order.product_id || 0);
+        const productInfo = productCategoryMap.get(Number(order.product_id) || 0);
         const categoryId = productInfo?.category?.id || 0;
         const categoryName = productInfo?.category?.name || '未分类';
         
@@ -162,8 +203,8 @@ export default function OrderCategoryProcessingPage() {
         };
         
         group.items.push(updatedOrder);
-        group.totalQuantity += parseFloat(order.quantity) || 0;
-        group.totalAmount += parseFloat(order.total) || 0;
+        group.totalQuantity += parseFloat(order.quantity.toString()) || 0;
+        group.totalAmount += parseFloat(order.total.toString()) || 0;
       });
 
       console.log('分组后的订单:', Array.from(groupedOrders.values()));
@@ -171,6 +212,10 @@ export default function OrderCategoryProcessingPage() {
     } catch (error) {
       console.error('处理订单时出错:', error);
       setError(error instanceof Error ? error.message : '加载数据失败');
+      // 如果错误是因为没有数据或API调用失败，跳回订单处理页面
+      setTimeout(() => {
+        router.push('/order-processing');
+      }, 3000); // 3秒后跳转，给用户时间看错误信息
     } finally {
       setLoading(false);
     }
@@ -194,10 +239,14 @@ export default function OrderCategoryProcessingPage() {
 
   const handleStatusChange = async (itemId: number, newStatus: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/orders/items/${itemId}/status`, {
+      // 获取认证令牌
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`http://localhost:8000/api/v1/order-processing/items/${itemId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -206,17 +255,7 @@ export default function OrderCategoryProcessingPage() {
         throw new Error('更新状态失败');
       }
 
-      // 更新localStorage中的数据
-      const items = localStorage.getItem('processingItems');
-      if (items) {
-        const processingItems: PendingOrder[] = JSON.parse(items);
-        const updatedItems = processingItems.map(item => 
-          item.id === itemId ? { ...item, status: newStatus } : item
-        );
-        localStorage.setItem('processingItems', JSON.stringify(updatedItems));
-      }
-
-      // 重新加载订单数据
+      // 直接重新加载数据，不再依赖localStorage
       loadAndProcessOrders();
     } catch (error) {
       console.error('更新状态失败:', error);
@@ -225,6 +264,48 @@ export default function OrderCategoryProcessingPage() {
   };
 
   const handleSupplierMatching = () => {
+    // 收集所有的订单项，确保包含完整的类别信息
+    const allItems = [];
+    
+    for (const group of categoryGroups) {
+      for (const item of group.items) {
+        // 使用适当的类型转换，确保对象有所需的字段
+        allItems.push({
+          id: item.id,
+          order_id: item.order_id,
+          order: {
+            order_no: item.order?.order_no || '',
+            ship: item.order?.ship
+          },
+          product: {
+            name: item.product?.name || '',
+            code: item.product?.code || '',
+            category: {
+              id: group.categoryId,
+              name: group.categoryName
+            }
+          },
+          quantity: parseFloat(item.quantity || '0'),
+          price: parseFloat(item.price || '0'),
+          total: parseFloat(item.total || '0'),
+          status: item.status
+        });
+      }
+    }
+    
+    // 保存所有类别ID到localStorage
+    const categoryIds = categoryGroups.map(group => group.categoryId);
+    localStorage.setItem('availableCategoryIds', JSON.stringify(categoryIds));
+    
+    // 如果只有一个类别，直接选中该类别
+    if (categoryIds.length === 1) {
+      localStorage.setItem('selectedCategoryId', categoryIds[0].toString());
+    }
+    
+    // 保存到localStorage
+    console.log('保存处理队列项目到localStorage:', allItems);
+    localStorage.setItem('processingItems', JSON.stringify(allItems));
+    
     router.push('/order-supplier-matching');
   };
 
@@ -250,6 +331,26 @@ export default function OrderCategoryProcessingPage() {
         </div>
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>处理流程指南</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground mb-2">
+            当前步骤：<span className="font-medium">产品分类（2/4）</span>
+          </div>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            <li className="text-gray-500">订单项选择与批量处理（已完成）</li>
+            <li className="text-blue-600 font-medium">产品分类 - 按类别组织和查看产品（当前步骤）</li>
+            <li>供应商匹配 - 为订单项选择合适的供应商</li>
+            <li>邮件通知 - 向所选供应商发送邮件通知</li>
+          </ol>
+          <div className="mt-3 text-sm">
+            此页面左侧显示数据库中的产品数据（如有），右侧显示当前订单数据，请比对并确认数据的准确性。
+          </div>
+        </CardContent>
+      </Card>
+
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -268,101 +369,127 @@ export default function OrderCategoryProcessingPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead>
-                  <tr>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">订单编号</th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">产品</th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">产品代码</th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">供应商</th>
-                    <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase">数量</th>
-                    <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase">单价</th>
-                    <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase">总价</th>
-                    <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase">状态</th>
-                    <th className="px-6 py-3 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase">操作</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {group.items.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.order?.order_no}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.product?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.product?.code || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.supplier?.name || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        {parseFloat(item.quantity).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        ¥{parseFloat(item.price).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                        ¥{parseFloat(item.total).toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        <span className={`px-2 py-1 rounded-full ${getStatusDisplay(item.status).className}`}>
-                          {getStatusDisplay(item.status).text}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        <div className="flex justify-center space-x-2">
-                          {item.status === 'pending' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusChange(item.id, 'processing')}
-                            >
-                              开始处理
-                            </Button>
-                          )}
-                          {item.status === 'processing' && (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => handleSupplierMatching()}
-                              >
-                                分配供应商
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleStatusChange(item.id, 'failed')}
-                              >
-                                处理失败
-                              </Button>
-                            </>
-                          )}
-                          {item.status === 'assigned' && (
-                            <Button
-                              size="sm"
-                              onClick={() => handleStatusChange(item.id, 'completed')}
-                            >
-                              完成处理
-                            </Button>
-                          )}
-                          {(item.status === 'failed' || item.status === 'completed') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStatusChange(item.id, 'pending')}
-                            >
-                              重新处理
-                            </Button>
-                          )}
+            {group.items.map((item) => (
+              <div key={item.id} className="mb-6 border rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-4 py-2 border-b font-medium">
+                  订单编号: {item.order?.order_no || '-'} | 产品ID: {item.product_id || '-'}
+                </div>
+                <div className="grid grid-cols-2 divide-x">
+                  {/* 左侧：数据库中的产品数据 */}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-blue-600 mb-3">数据库中的产品信息</h3>
+                    {item.product_id && dbProducts.has(item.product_id) ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-1">
+                          <div className="text-sm font-medium">产品ID:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.product_id || '-'}</div>
+                          
+                          <div className="text-sm font-medium">产品名称:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.product_name || '-'}</div>
+                          
+                          <div className="text-sm font-medium">产品代码:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.product_code || '-'}</div>
+                          
+                          <div className="text-sm font-medium">产品类别:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.category?.name || '-'}</div>
+                          
+                          <div className="text-sm font-medium">类别ID:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.category?.id || '-'}</div>
+                          
+                          <div className="text-sm font-medium">推荐供应商:</div>
+                          <div className="text-sm">{dbProducts.get(item.product_id)?.supplier?.name || '-'}</div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-32 text-gray-400 italic">
+                        数据库中未找到匹配的产品信息
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* 右侧：当前订单中的数据 */}
+                  <div className="p-4">
+                    <h3 className="font-semibold text-green-600 mb-3">当前订单数据</h3>
+                    <div className="space-y-2">
+                      <div className="grid grid-cols-2 gap-1">
+                        <div className="text-sm font-medium">产品名称:</div>
+                        <div className="text-sm">{item.product?.name || '-'}</div>
+                        
+                        <div className="text-sm font-medium">产品代码:</div>
+                        <div className="text-sm">{item.product?.code || '-'}</div>
+                        
+                        <div className="text-sm font-medium">产品类别:</div>
+                        <div className="text-sm">{item.product?.category?.name || '-'}</div>
+                        
+                        <div className="text-sm font-medium">供应商:</div>
+                        <div className="text-sm">{item.supplier?.name || '-'}</div>
+                        
+                        <div className="text-sm font-medium">数量:</div>
+                        <div className="text-sm">{parseFloat(item.quantity).toFixed(2)}</div>
+                        
+                        <div className="text-sm font-medium">单价:</div>
+                        <div className="text-sm">¥{parseFloat(item.price).toFixed(2)}</div>
+                        
+                        <div className="text-sm font-medium">总价:</div>
+                        <div className="text-sm">¥{parseFloat(item.total).toFixed(2)}</div>
+                        
+                        <div className="text-sm font-medium">状态:</div>
+                        <div className="text-sm">
+                          <span className={`px-2 py-1 rounded-full ${getStatusDisplay(item.status).className}`}>
+                            {getStatusDisplay(item.status).text}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex justify-end space-x-2">
+                        {item.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleStatusChange(item.id, 'processing')}
+                          >
+                            开始处理
+                          </Button>
+                        )}
+                        {item.status === 'processing' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSupplierMatching()}
+                            >
+                              分配供应商
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleStatusChange(item.id, 'failed')}
+                            >
+                              处理失败
+                            </Button>
+                          </>
+                        )}
+                        {item.status === 'assigned' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleStatusChange(item.id, 'completed')}
+                          >
+                            完成处理
+                          </Button>
+                        )}
+                        {(item.status === 'failed' || item.status === 'completed') && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStatusChange(item.id, 'pending')}
+                          >
+                            重新处理
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       ))}

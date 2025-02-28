@@ -5,13 +5,15 @@ from fastapi.responses import JSONResponse
 import logging
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.core.init_app import init_superadmin
+from app.db.session import SessionLocal
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
+    title="Cruise System API",
     version=settings.PROJECT_VERSION,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
@@ -31,15 +33,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": str(exc.errors())}
     )
 
-# 设置CORS
+# 修改CORS配置，不要使用通配符
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # 允许前端域名
-    allow_credentials=True,  # 允许携带认证信息
-    allow_methods=["*"],  # 允许所有HTTP方法
-    allow_headers=["*"],  # 允许所有请求头
-    expose_headers=["*"],  # 允许暴露所有响应头
-    max_age=3600,  # 预检请求的缓存时间
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # 添加端口3001
+    allow_credentials=True,  # 允许携带凭证
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 添加路由检查端点
@@ -54,8 +54,21 @@ async def list_routes():
         })
     return {"routes": routes}
 
+# 注册 API 路由
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
-async def root():
-    return {"message": "API 服务正在运行"} 
+def read_root():
+    return {"message": "Welcome to Cruise System API"}
+
+@app.on_event("startup")
+def init_data():
+    """
+    应用启动时初始化数据
+    """
+    db = SessionLocal()
+    try:
+        # 初始化超级管理员账号
+        init_superadmin(db)
+    finally:
+        db.close() 

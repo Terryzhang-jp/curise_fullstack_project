@@ -203,7 +203,7 @@ class CRUDOrderUpload(CRUDBase[OrderUpload, OrderUploadCreate, OrderUploadUpdate
                         quantity=upload_item.quantity,
                         price=upload_item.unit_price,
                         total=item_total,
-                        status="pending"
+                        status="unprocessed"
                     )
                     db.add(order_item)
                     total_amount += item_total

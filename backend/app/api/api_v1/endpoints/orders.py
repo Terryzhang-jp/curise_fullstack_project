@@ -1,11 +1,15 @@
 from typing import List, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, cast, Float
 from pydantic import BaseModel
 import os
 import shutil
 import logging
+from datetime import datetime
+import csv
+import tempfile
+from decimal import Decimal
 
 from app import crud
 from app.api import deps
@@ -14,10 +18,9 @@ from app.crud.crud_order_upload import order_upload
 from app.crud.crud_order import order as crud_order
 from app.schemas.order_analysis import OrderAnalysis, OrderAnalysisItem
 from app.schemas.order_upload import OrderUpload
-from app.schemas.order import Order
+from app.schemas.order import Order, OrderCreate, OrderItemBase, OrderItem
 from app.utils.excel import create_order_items_excel
-from app.models.models import OrderItem as OrderItemModel, Order as OrderModel, Product as ProductModel, NotificationHistory
-from app.schemas.order import OrderItem
+from app.models.models import OrderItem as OrderItemModel, Order as OrderModel, Product as ProductModel, NotificationHistory, Supplier
 from app.utils.email import send_email_with_attachments
 
 class PendingOrderResponse(BaseModel):
@@ -33,20 +36,61 @@ class PendingOrderResponse(BaseModel):
     total: float
     status: str
 
+class OrderStatusUpdate(BaseModel):
+    status: str
+
+class OrderItemStatusUpdate(BaseModel):
+    status: str
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+@router.get("/statistics")
+def get_order_statistics(
+    db: Session = Depends(deps.get_db),
+):
+    """获取订单统计信息"""
+    try:
+        # 获取所有订单的状态统计
+        orders = db.query(OrderModel).all()
+        total_orders = len(orders)
+        not_started_orders = sum(1 for o in orders if o.status == "not_started")
+        partially_processed_orders = sum(1 for o in orders if o.status == "partially_processed")
+        fully_processed_orders = sum(1 for o in orders if o.status == "fully_processed")
+
+        # 获取所有订单项的状态统计
+        order_items = db.query(OrderItemModel).all()
+        total_items = len(order_items)
+        processed_items = sum(1 for i in order_items if i.status == "processed")
+        unprocessed_items = sum(1 for i in order_items if i.status == "unprocessed")
+
+        return {
+            "total_orders": total_orders,
+            "not_started_orders": not_started_orders,
+            "partially_processed_orders": partially_processed_orders,
+            "fully_processed_orders": fully_processed_orders,
+            "total_items": total_items,
+            "processed_items": processed_items,
+            "unprocessed_items": unprocessed_items
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 @router.get("/", response_model=List[Order])
 def get_orders(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
-    status: Optional[str] = None
+    status: Optional[str] = None,
+    include_relations: bool = False
 ):
     """获取订单列表"""
     try:
-        logger.info(f"正在获取订单列表: skip={skip}, limit={limit}, status={status}")
-        orders = crud_order.get_multi(db, skip=skip, limit=limit, status=status)
+        logger.info(f"正在获取订单列表: skip={skip}, limit={limit}, status={status}, include_relations={include_relations}")
+        orders = crud_order.get_multi(db, skip=skip, limit=limit, status=status, include_relations=include_relations)
         logger.info(f"成功获取 {len(orders)} 个订单")
         return orders
     except Exception as e:
@@ -72,6 +116,18 @@ def get_order(
                 status_code=404,
                 detail="订单不存在"
             )
+        
+        # 添加详细的订单项目信息日志
+        logger.info(f"订单状态: {order.status}, 总金额: {order.total_amount}, 订单项目数量: {len(order.order_items) if order.order_items else 0}")
+        if order.order_items:
+            for idx, item in enumerate(order.order_items):
+                logger.info(f"订单项目 #{idx+1}: ID={item.id}, 产品ID={item.product_id}, 状态={item.status}, 数量={item.quantity}, 价格={item.price}")
+        else:
+            logger.warning(f"订单 {order_id} 没有关联的订单项目")
+            
+        # 检查前端请求头信息
+        logger.info("请求获取订单详情的前端信息已记录")
+        
         logger.info("成功获取订单详情")
         return order
     except HTTPException:
@@ -443,3 +499,162 @@ async def send_order_email(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"发送邮件失败: {str(e)}")
+
+@router.post("/", response_model=Order)
+def create_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_in: OrderCreate
+):
+    """创建新订单"""
+    try:
+        logger.info(f"开始创建新订单: {order_in.order_no}")
+        order = crud_order.create_with_items(db, obj_in=order_in)
+        logger.info(f"订单创建成功: id={order.id}, order_no={order.order_no}")
+        return order
+    except Exception as e:
+        logger.error(f"创建订单失败: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"创建订单失败: {str(e)}"
+        )
+
+@router.put("/{order_id}/status")
+def update_order_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    status_update: OrderStatusUpdate
+):
+    """更新订单状态"""
+    try:
+        logger.info(f"正在更新订单状态: order_id={order_id}, 新状态={status_update.status}")
+        order = crud_order.get(db, id=order_id)
+        if not order:
+            logger.warning(f"未找到订单: order_id={order_id}")
+            raise HTTPException(
+                status_code=404,
+                detail="订单不存在"
+            )
+        
+        # 更新订单状态
+        order_in = {"status": status_update.status}
+        updated_order = crud_order.update(db, db_obj=order, obj_in=order_in)
+        
+        logger.info(f"成功更新订单状态: order_id={order_id}, 新状态={updated_order.status}")
+        return {"message": "更新成功", "order_id": order_id, "status": updated_order.status}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"更新订单状态失败: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"更新订单状态失败: {str(e)}"
+        )
+
+@router.put("/{order_id}/items/status")
+def update_order_items_status(
+    *,
+    db: Session = Depends(deps.get_db),
+    order_id: int,
+    status_update: OrderItemStatusUpdate
+):
+    """批量更新订单项状态"""
+    try:
+        logger.info(f"尝试批量更新订单项状态: order_id={order_id}, new_status={status_update.status}")
+        
+        order = crud_order.get_with_items(db, id=order_id)
+        if not order:
+            logger.warning(f"未找到订单: order_id={order_id}")
+            raise HTTPException(status_code=404, detail="订单不存在")
+        
+        updated_count = 0
+        if order.order_items:
+            for item in order.order_items:
+                try:
+                    item.status = status_update.status
+                    updated_count += 1
+                    logger.info(f"已更新订单项状态: item_id={item.id}, new_status={status_update.status}")
+                except Exception as e:
+                    logger.error(f"更新订单项状态失败: item_id={item.id}, error={str(e)}")
+            
+            db.commit()
+            
+            # 根据订单项状态更新订单状态
+            if all(item.status == "processed" for item in order.order_items):
+                order.status = "fully_processed"
+            elif any(item.status == "processed" for item in order.order_items):
+                order.status = "partially_processed"
+            else:
+                order.status = "not_started"
+            
+            db.commit()
+            logger.info(f"订单状态已更新: order_id={order_id}, new_status={order.status}")
+            
+        return {
+            "message": "更新成功",
+            "order_id": order_id,
+            "updated_items_count": updated_count,
+            "order_status": order.status if updated_count > 0 else "无更改"
+        }
+    except Exception as e:
+        logger.error(f"更新订单项状态发生错误: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"更新订单项状态失败: {str(e)}")
+
+@router.post("/items", response_model=OrderItem)
+def create_order_item(
+    *,
+    db: Session = Depends(deps.get_db),
+    item_data: OrderItemBase
+):
+    """创建新的订单项目"""
+    try:
+        logger.info(f"尝试创建新的订单项目: order_id={item_data.order_id}, product_id={item_data.product_id}")
+        
+        # 检查订单是否存在
+        order = crud_order.get(db, id=item_data.order_id)
+        if not order:
+            logger.warning(f"未找到订单: order_id={item_data.order_id}")
+            raise HTTPException(status_code=404, detail="订单不存在")
+        
+        # 检查产品是否存在
+        product = db.query(ProductModel).get(item_data.product_id)
+        if not product:
+            logger.warning(f"未找到产品: product_id={item_data.product_id}")
+            raise HTTPException(status_code=404, detail="产品不存在")
+        
+        # 检查供应商是否存在
+        supplier = db.query(Supplier).get(item_data.supplier_id)
+        if not supplier:
+            logger.warning(f"未找到供应商: supplier_id={item_data.supplier_id}")
+            raise HTTPException(status_code=404, detail="供应商不存在")
+        
+        # 创建新的订单项目
+        new_item = OrderItemModel(
+            order_id=item_data.order_id,
+            product_id=item_data.product_id,
+            supplier_id=item_data.supplier_id,
+            quantity=item_data.quantity,
+            price=item_data.price,
+            total=item_data.total,
+            status=item_data.status
+        )
+        
+        db.add(new_item)
+        db.commit()
+        db.refresh(new_item)
+        
+        # 更新订单总金额 - 修复类型不匹配问题
+        order.total_amount = float(Decimal(str(order.total_amount)) + Decimal(str(new_item.total)))
+        db.commit()
+        
+        logger.info(f"成功创建订单项目: id={new_item.id}")
+        
+        return new_item
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"创建订单项目失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"创建订单项目失败: {str(e)}")
