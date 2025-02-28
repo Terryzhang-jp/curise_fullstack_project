@@ -1,4 +1,4 @@
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
@@ -8,7 +8,8 @@ import io
 from app import crud
 from app.api import deps
 from app.schemas.product import ProductCreate, ProductUpdate, Product, CheckResult
-from app.models.models import ProductHistory, Product as ProductModel
+from app.models.models import ProductHistory, Product as ProductModel, Supplier, OrderItem
+from app.models.models import User as UserModel
 
 # 添加新的schema
 from pydantic import BaseModel
@@ -403,3 +404,223 @@ async def get_product_categories(
             status_code=500,
             detail=f"获取产品分类信息失败: {str(e)}"
         )
+
+@router.post("/supplier-mappings", response_model=Dict[str, Dict])
+def get_product_supplier_mappings(
+    product_ids: List[int],
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_active_user),
+):
+    """
+    获取产品与供应商的映射关系。
+    返回两种映射:
+    1. direct: 直接与产品关联的供应商（当前供应商、历史供应商、产品历史记录中的供应商）
+    2. category: 基于产品类别匹配的供应商
+    """
+    try:
+        # 初始化结果结构
+        result = {
+            "direct": {},    # 直接映射
+            "category": {}   # 类别映射
+        }
+        
+        # 获取所有请求的产品和所有活跃的供应商
+        products = db.query(Product).filter(Product.id.in_(product_ids)).all()
+        suppliers = db.query(Supplier).filter(Supplier.status == True).all()
+        
+        print(f"找到 {len(products)} 个产品和 {len(suppliers)} 个供应商进行匹配")
+        
+        # 构建类别ID到供应商的映射
+        category_suppliers = {}
+        for supplier in suppliers:
+            for category in supplier.categories:
+                if category.id not in category_suppliers:
+                    category_suppliers[category.id] = []
+                category_suppliers[category.id].append({
+                    "id": supplier.id,
+                    "name": supplier.name,
+                    "match_type": "category"
+                })
+        
+        # 为每个产品找到直接关联的供应商
+        for product in products:
+            product_id = str(product.id)
+            direct_suppliers = set()  # 使用集合避免重复
+            
+            # 1. 获取产品当前供应商
+            if product.supplier_id:
+                direct_suppliers.add(product.supplier_id)
+                
+            # 2. 获取来自订单项的历史供应商
+            order_items = db.query(OrderItem).filter(
+                OrderItem.product_id == product.id
+            ).order_by(OrderItem.created_at.desc()).limit(5).all()
+            
+            for item in order_items:
+                if item.supplier_id:
+                    direct_suppliers.add(item.supplier_id)
+            
+            # 3. 从产品历史记录中获取供应商
+            product_history = db.query(ProductHistory).filter(
+                ProductHistory.product_id == product.id
+            ).order_by(ProductHistory.changed_at.desc()).limit(10).all()
+            
+            for history in product_history:
+                if history.supplier_id:
+                    direct_suppliers.add(history.supplier_id)
+            
+            # 获取这些供应商的详细信息
+            direct_supplier_details = []
+            if direct_suppliers:
+                supplier_details = db.query(Supplier).filter(
+                    Supplier.id.in_(list(direct_suppliers)),
+                    Supplier.status == True
+                ).all()
+                
+                for supplier in supplier_details:
+                    direct_supplier_details.append({
+                        "id": supplier.id,
+                        "name": supplier.name,
+                        "match_type": "direct",
+                        "is_current": supplier.id == product.supplier_id
+                    })
+            
+            # 存储直接映射结果
+            result["direct"][product_id] = direct_supplier_details
+            
+            # 存储类别映射结果 - 如果产品有类别
+            result["category"][product_id] = []
+            if product.category_id and product.category_id in category_suppliers:
+                result["category"][product_id] = category_suppliers[product.category_id]
+            
+            print(f"产品 {product.name} (ID: {product.id}):")
+            print(f"  - 直接匹配的供应商: {len(direct_supplier_details)}")
+            print(f"  - 类别匹配的供应商: {len(result['category'][product_id])}")
+
+        return result
+    except Exception as e:
+        print(f"获取产品供应商映射时出错: {str(e)}")
+        # 返回一个空结果而不是抛出错误
+        return {"direct": {}, "category": {}}
+
+@router.post("/available-suppliers", response_model=Dict[str, List])
+def get_available_suppliers(
+    product_ids: List[int],
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_active_user),
+):
+    """
+    获取产品的可用供应商（简化版接口）
+    返回格式：{ "product_id": [供应商列表] }
+    """
+    try:
+        result = {}
+        
+        # 获取所有请求的产品
+        products = db.query(ProductModel).filter(ProductModel.id.in_(product_ids)).all()
+        print(f"找到 {len(products)} 个产品进行供应商匹配")
+        
+        # 获取所有活跃的供应商
+        all_suppliers = db.query(Supplier).filter(Supplier.status == True).all()
+        print(f"数据库中有 {len(all_suppliers)} 个活跃供应商")
+        
+        # 构建类别ID到供应商的映射
+        category_suppliers = {}
+        for supplier in all_suppliers:
+            for category in supplier.categories:
+                if category.id not in category_suppliers:
+                    category_suppliers[category.id] = []
+                category_suppliers[category.id].append(supplier.id)
+        
+        # 为每个产品找到可用的供应商
+        for product in products:
+            product_id = str(product.id)
+            available_supplier_ids = set()  # 使用集合避免重复
+            
+            # 1. 添加产品当前供应商
+            if product.supplier_id:
+                available_supplier_ids.add(product.supplier_id)
+                
+            # 2. 添加产品所属分类的所有供应商
+            if product.category_id and product.category_id in category_suppliers:
+                for supplier_id in category_suppliers[product.category_id]:
+                    available_supplier_ids.add(supplier_id)
+            
+            # 获取这些供应商的详细信息
+            supplier_details = []
+            if available_supplier_ids:
+                suppliers = db.query(Supplier).filter(
+                    Supplier.id.in_(list(available_supplier_ids)),
+                    Supplier.status == True
+                ).all()
+                
+                for supplier in suppliers:
+                    supplier_details.append({
+                        "id": supplier.id,
+                        "name": supplier.name,
+                        "email": supplier.email,
+                        "is_current": supplier.id == product.supplier_id
+                    })
+            
+            result[product_id] = supplier_details
+            print(f"产品 {product.name} (ID: {product.id}) 有 {len(supplier_details)} 个可用供应商")
+
+        return result
+    except Exception as e:
+        print(f"获取产品可用供应商时出错: {str(e)}")
+        # 返回一个空结果而不是抛出错误
+        return {}
+
+@router.post("/available-suppliers-by-code", response_model=Dict[str, List])
+def get_available_suppliers_by_code(
+    product_codes: List[str],
+    db: Session = Depends(deps.get_db),
+    current_user: UserModel = Depends(deps.get_current_active_user),
+):
+    """
+    通过产品代码获取产品的可用供应商（仅返回直接供应商）
+    返回格式：{ "product_code": [供应商列表] }
+    """
+    try:
+        result = {}
+        
+        # 获取所有请求的产品（通过代码查询）
+        products = db.query(ProductModel).filter(ProductModel.code.in_(product_codes)).all()
+        print(f"通过产品代码找到 {len(products)} 个产品进行供应商匹配")
+        for product in products:
+            print(f"  - 产品: {product.name}, 代码: {product.code}, ID: {product.id}")
+        
+        # 为每个产品找到直接关联的供应商
+        for product in products:
+            if not product.code:
+                print(f"跳过没有代码的产品: {product.name} (ID: {product.id})")
+                continue
+                
+            product_code = product.code
+            
+            # 获取产品的直接供应商
+            supplier_details = []
+            
+            # 只添加产品当前供应商
+            if product.supplier_id:
+                supplier = db.query(Supplier).filter(
+                    Supplier.id == product.supplier_id,
+                    Supplier.status == True
+                ).first()
+                
+                if supplier:
+                    supplier_details.append({
+                        "id": supplier.id,
+                        "name": supplier.name,
+                        "email": supplier.email,
+                        "is_current": True
+                    })
+            
+            result[product_code] = supplier_details
+            print(f"产品 {product.name} (代码: {product_code}) 有 {len(supplier_details)} 个直接供应商")
+
+        return result
+    except Exception as e:
+        print(f"获取产品直接供应商时出错: {str(e)}")
+        # 返回一个空结果而不是抛出错误
+        return {}
