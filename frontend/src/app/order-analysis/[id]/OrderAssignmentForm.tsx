@@ -86,7 +86,7 @@ export default function OrderAssignmentForm({ items, onClose, onSuccess }: Order
     };
 
     try {
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_ANALYSIS_ASSIGN), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

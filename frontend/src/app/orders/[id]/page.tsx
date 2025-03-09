@@ -151,7 +151,7 @@ export default function OrderDetailPage() {
       console.log('Debug - itemIds:', itemIds);
       console.log('Debug - JSON body:', JSON.stringify(itemIds));
       
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -111,4 +111,18 @@ export const API_ENDPOINTS = {
 
 ### Q: 部署后出现CORS错误
 
-**解决方案**：确保后端CORS配置包含Vercel域名，并重新部署后端。 
+**解决方案**：确保后端CORS配置包含Vercel域名，并重新部署后端。
+
+### Q: 部署时出现"Type error: Argument of type 'number' is not assignable to parameter of type 'string'"错误
+
+**解决方案**：这个错误通常是因为在JavaScript中使用连字符（-）引用对象属性。例如：
+
+```typescript
+// 错误用法 - 会被解析为减法运算
+API_ENDPOINTS.ORDER-ANALYSIS
+
+// 正确用法 - 使用下划线
+API_ENDPOINTS.ORDER_ANALYSIS
+```
+
+确保所有引用API_ENDPOINTS的地方都使用下划线（_）代替连字符（-）。 

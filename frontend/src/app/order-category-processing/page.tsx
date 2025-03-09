@@ -75,7 +75,7 @@ export default function OrderCategoryProcessingPage() {
 
       // 从API获取处理队列数据，而不是从localStorage
       const token = localStorage.getItem('token');
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING_ITEMS), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

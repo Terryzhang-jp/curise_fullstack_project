@@ -151,7 +151,7 @@ export default function OrderEmailPage() {
           throw new Error('未登录或会话已过期');
         }
         
-        const templateResponse = await fetch(getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES), {
+        const templateResponse = await fetch(getApiUrl(API_ENDPOINTS.EMAIL_TEMPLATES), {
           headers: {
             'Authorization': `Bearer ${token}`
           }

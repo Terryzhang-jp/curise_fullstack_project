@@ -86,7 +86,7 @@ export default function OrderUploadForm({ onClose, onSuccess }: OrderUploadFormP
     formDataToSend.append('ship_id', formData.ship_id.toString());
 
     try {
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_ANALYSIS_UPLOAD), {
         method: 'POST',
         body: formDataToSend,
       });

@@ -97,7 +97,7 @@ export default function UploadPage() {
     formData.append('ship_id', shipId);
 
     try {
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_ANALYSIS_UPLOAD), {
         method: 'POST',
         body: formData,
       });

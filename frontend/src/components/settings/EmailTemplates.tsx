@@ -41,7 +41,7 @@ export default function EmailTemplates() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES));
+      const response = await fetch(getApiUrl(API_ENDPOINTS.EMAIL_TEMPLATES));
       if (!response.ok) throw new Error('获取模板列表失败');
       const data = await response.json();
       setTemplates(data);
@@ -61,8 +61,8 @@ export default function EmailTemplates() {
     e.preventDefault();
     try {
       const url = editingTemplate
-        ? `api/v1/email-templates/${editingTemplate.id}`
-        : getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES);
+        ? `${getApiUrl(API_ENDPOINTS.EMAIL_TEMPLATES)}/${editingTemplate.id}`
+        : getApiUrl(API_ENDPOINTS.EMAIL_TEMPLATES);
       
       const response = await fetch(url, {
         method: editingTemplate ? 'PUT' : 'POST',

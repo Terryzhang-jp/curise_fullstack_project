@@ -314,7 +314,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 从API获取处理队列数据
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -370,7 +370,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API迁移本地数据到数据库
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -524,7 +524,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API迁移测试数据到数据库
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -562,7 +562,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API清空处理队列
-      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER_PROCESSING), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

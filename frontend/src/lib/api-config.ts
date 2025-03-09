@@ -54,4 +54,4 @@ export const API_ENDPOINTS = {
   // 健康检查
   HEALTH: 'api/v1/health',
   HEALTH_DB: 'api/v1/health/db'
-}; 
+};
