@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PlusIcon, Pencil, Trash2, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface EmailTemplate {
   id: number;
@@ -40,7 +41,7 @@ export default function EmailTemplates() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:8000/api/v1/email-templates/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES));
       if (!response.ok) throw new Error('获取模板列表失败');
       const data = await response.json();
       setTemplates(data);
@@ -60,8 +61,8 @@ export default function EmailTemplates() {
     e.preventDefault();
     try {
       const url = editingTemplate
-        ? `http://localhost:8000/api/v1/email-templates/${editingTemplate.id}`
-        : 'http://localhost:8000/api/v1/email-templates/';
+        ? `api/v1/email-templates/${editingTemplate.id}`
+        : getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES);
       
       const response = await fetch(url, {
         method: editingTemplate ? 'PUT' : 'POST',
@@ -86,7 +87,7 @@ export default function EmailTemplates() {
     if (!confirm('确定要删除这个模板吗？')) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/email-templates/${id}`, {
+      const response = await fetch(`api/v1/email-templates/${id}`, {
         method: 'DELETE',
       });
 

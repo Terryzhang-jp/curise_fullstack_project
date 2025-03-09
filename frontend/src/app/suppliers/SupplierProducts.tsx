@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { XMarkIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Supplier {
   id: number;
@@ -61,7 +62,7 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/products/search?supplier_id=${supplier.id}`);
+      const response = await fetch(`api/v1/products/search?supplier_id=${supplier.id}`);
       if (!response.ok) {
         throw new Error('获取产品列表失败');
       }
@@ -76,7 +77,7 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/categories/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.CATEGORIES));
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -86,7 +87,7 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
 
   const fetchCountries = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/countries/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
       const data = await response.json();
       setCountries(data);
     } catch (error) {
@@ -98,7 +99,7 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
     if (!editingProduct) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/products/${editingProduct.id}`, {
+      const response = await fetch(`api/v1/products/${editingProduct.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ export default function SupplierProducts({ supplier, onClose }: Props) {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/products/${productId}`, {
+      const response = await fetch(`api/v1/products/${productId}`, {
         method: 'DELETE',
       });
 

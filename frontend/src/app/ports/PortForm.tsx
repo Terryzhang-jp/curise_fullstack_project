@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -39,7 +40,7 @@ export default function PortForm({ port, onClose, onSuccess }: PortFormProps) {
     // 获取国家列表
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/countries/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
         const data = await response.json();
         setCountries(data);
         
@@ -59,8 +60,8 @@ export default function PortForm({ port, onClose, onSuccess }: PortFormProps) {
     e.preventDefault();
 
     const url = port
-      ? `http://localhost:8000/api/v1/ports/${port.id}`
-      : 'http://localhost:8000/api/v1/ports/';
+      ? `api/v1/ports/${port.id}`
+      : getApiUrl(API_ENDPOINTS.PORTS);
 
     try {
       const response = await fetch(url, {

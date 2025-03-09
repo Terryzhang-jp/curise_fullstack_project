@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import PortForm from './PortForm';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Port {
   id: number;
@@ -29,7 +30,7 @@ export default function PortsPage() {
   const fetchPorts = async () => {
     try {
       console.log('开始获取港口列表...');
-      const response = await fetch('http://localhost:8000/api/v1/ports/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.PORTS));
       console.log('API 响应状态:', response.status);
       
       if (!response.ok) {
@@ -131,7 +132,7 @@ export default function PortsPage() {
     if (!confirm('确定要删除这个港口吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/ports/${id}`, {
+      await fetch(`api/v1/ports/${id}`, {
         method: 'DELETE',
       });
       fetchPorts();

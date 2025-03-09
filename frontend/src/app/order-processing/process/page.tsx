@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderItem {
   id: number;
@@ -68,7 +69,7 @@ export default function ProcessOrderItemsPage() {
       setIsProcessing(true);
       
       // 调用后端API处理订单项目
-      const response = await fetch('http://localhost:8000/api/v1/orders/process-items', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDERS), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

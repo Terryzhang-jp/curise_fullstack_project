@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -50,7 +51,7 @@ export default function SupplierForm({ supplier, onClose, onSuccess }: SupplierF
     // 获取国家列表
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/countries/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
         const data = await response.json();
         setCountries(data);
         
@@ -66,7 +67,7 @@ export default function SupplierForm({ supplier, onClose, onSuccess }: SupplierF
     // 获取类别列表
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/categories/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.CATEGORIES));
         const data = await response.json();
         setCategories(data);
       } catch (error) {
@@ -96,7 +97,7 @@ export default function SupplierForm({ supplier, onClose, onSuccess }: SupplierF
       
       if (supplier) {
         // 如果是更新现有供应商
-        const response = await fetch(`http://localhost:8000/api/v1/suppliers/${supplier.id}`, {
+        const response = await fetch(`api/v1/suppliers/${supplier.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -112,7 +113,7 @@ export default function SupplierForm({ supplier, onClose, onSuccess }: SupplierF
         updatedSupplier = await response.json();
       } else {
         // 如果是创建新供应商
-        const response = await fetch('http://localhost:8000/api/v1/suppliers/', {
+        const response = await fetch(getApiUrl(API_ENDPOINTS.SUPPLIERS), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export default function SupplierForm({ supplier, onClose, onSuccess }: SupplierF
 
       // 更新类别关联
       console.log('正在更新类别，类别ID列表:', formData.category_ids);
-      const categoriesUrl = `http://localhost:8000/api/v1/suppliers/${updatedSupplier.id}/categories`;
+      const categoriesUrl = `api/v1/suppliers/${updatedSupplier.id}/categories`;
       const categoriesResponse = await fetch(categoriesUrl, {
         method: 'PUT',
         headers: {

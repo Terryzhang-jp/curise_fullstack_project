@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import CountryForm from './CountryForm';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
+import { toast } from '@/components/ui/use-toast';
 
 interface Country {
   id: number;
@@ -20,14 +22,17 @@ export default function CountriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCountries = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/countries/');
+      setIsLoading(true);
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
       const data = await response.json();
       setCountries(data);
     } catch (error) {
       console.error('Error fetching countries:', error);
+      setError('获取国家列表失败');
     } finally {
       setIsLoading(false);
     }
@@ -89,14 +94,29 @@ export default function CountriesPage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定要删除这个国家吗？')) return;
-
+    
     try {
-      await fetch(`http://localhost:8000/api/v1/countries/${id}`, {
+      setIsLoading(true);
+      await fetch(`${getApiUrl(API_ENDPOINTS.COUNTRIES)}/${id}`, {
         method: 'DELETE',
       });
-      fetchCountries();
+      
+      // 从列表中移除被删除的国家
+      setCountries(countries.filter(country => country.id !== id));
+      
+      toast({
+        title: '删除成功',
+        description: '国家已成功删除',
+      });
     } catch (error) {
-      console.error('Error deleting country:', error);
+      console.error('删除国家失败:', error);
+      toast({
+        title: '删除失败',
+        description: '无法删除国家，请稍后再试',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

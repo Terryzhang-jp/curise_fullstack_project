@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface PendingOrder {
   id: number;
@@ -74,7 +75,7 @@ export default function OrderCategoryProcessingPage() {
 
       // 从API获取处理队列数据，而不是从localStorage
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/items', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -127,10 +128,10 @@ export default function OrderCategoryProcessingPage() {
       const queryParams = new URLSearchParams();
       productIds.forEach(id => queryParams.append('product_ids', id.toString()));
       
-      console.log('请求URL:', `http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`);
+      console.log('请求URL:', `api/v1/products/categories/by-ids?${queryParams.toString()}`);
       console.log('产品ID列表:', productIds);
       
-      const response2 = await fetch(`http://localhost:8000/api/v1/products/categories/by-ids?${queryParams.toString()}`, {
+      const response2 = await fetch(`api/v1/products/categories/by-ids?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -242,7 +243,7 @@ export default function OrderCategoryProcessingPage() {
       // 获取认证令牌
       const token = localStorage.getItem('token');
       
-      const response = await fetch(`http://localhost:8000/api/v1/order-processing/items/${itemId}/status`, {
+      const response = await fetch(`api/v1/order-processing/items/${itemId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

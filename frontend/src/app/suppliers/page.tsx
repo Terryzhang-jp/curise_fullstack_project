@@ -6,6 +6,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon, ListBulletIcon } from '@heroicons/react/24/outline';
 import SupplierForm from './SupplierForm';
 import SupplierProducts from './SupplierProducts';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -57,7 +58,7 @@ export default function SuppliersPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/suppliers/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.SUPPLIERS));
       const data = await response.json();
       console.log('供应商数据:', data);
       setSuppliers(data);
@@ -164,7 +165,7 @@ export default function SuppliersPage() {
     if (!confirm('确定要删除这个供应商吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/suppliers/${id}`, {
+      await fetch(`api/v1/suppliers/${id}`, {
         method: 'DELETE',
       });
       fetchSuppliers();

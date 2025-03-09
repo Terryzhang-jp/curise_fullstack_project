@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Company {
   id: number;
@@ -40,7 +41,7 @@ export default function ShipForm({ ship, onClose, onSuccess }: ShipFormProps) {
     // 获取公司列表
     const fetchCompanies = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/companies/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COMPANIES));
         const data = await response.json();
         setCompanies(data);
         
@@ -60,8 +61,8 @@ export default function ShipForm({ ship, onClose, onSuccess }: ShipFormProps) {
     e.preventDefault();
 
     const url = ship
-      ? `http://localhost:8000/api/v1/ships/${ship.id}`
-      : 'http://localhost:8000/api/v1/ships/';
+      ? `api/v1/ships/${ship.id}`
+      : getApiUrl(API_ENDPOINTS.SHIPS);
 
     try {
       const response = await fetch(url, {

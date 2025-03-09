@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface User {
   id: number;
@@ -63,7 +64,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/api/v1/users/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.USERS), {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -100,7 +101,7 @@ export default function UsersPage() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/api/v1/users/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.USERS), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ export default function UsersPage() {
         delete dataToSend.password;
       }
 
-      const response = await fetch(`http://localhost:8000/api/v1/users/${editingUser.id}`, {
+      const response = await fetch(`api/v1/users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +178,7 @@ export default function UsersPage() {
 
   const handleDeleteUser = async (userId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/users/${userId}`, {
+      const response = await fetch(`api/v1/users/${userId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

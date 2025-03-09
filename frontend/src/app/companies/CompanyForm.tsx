@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -43,7 +44,7 @@ export default function CompanyForm({ company, onClose, onSuccess }: CompanyForm
     // 获取国家列表
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/countries/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
         const data = await response.json();
         setCountries(data);
         
@@ -63,8 +64,8 @@ export default function CompanyForm({ company, onClose, onSuccess }: CompanyForm
     e.preventDefault();
 
     const url = company
-      ? `http://localhost:8000/api/v1/companies/${company.id}`
-      : 'http://localhost:8000/api/v1/companies/';
+      ? `api/v1/companies/${company.id}`
+      : getApiUrl(API_ENDPOINTS.COMPANIES);
 
     try {
       const response = await fetch(url, {

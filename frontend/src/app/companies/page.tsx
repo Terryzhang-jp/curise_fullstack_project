@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import CompanyForm from './CompanyForm';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
+import { toast } from '@/components/ui/use-toast';
 
 interface Company {
   id: number;
@@ -30,7 +32,8 @@ export default function CompaniesPage() {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/companies/');
+      setIsLoading(true);
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COMPANIES));
       const data = await response.json();
       setCompanies(data);
     } catch (error) {
@@ -107,15 +110,29 @@ export default function CompaniesPage() {
   ];
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个公司吗？')) return;
+    if (!window.confirm('确定要删除这家公司吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/companies/${id}`, {
+      setIsLoading(true);
+      await fetch(`${getApiUrl(API_ENDPOINTS.COMPANIES)}/${id}`, {
         method: 'DELETE',
       });
+      
+      toast({
+        title: "删除成功",
+        description: "公司已成功删除"
+      });
+      
       fetchCompanies();
     } catch (error) {
       console.error('Error deleting company:', error);
+      toast({
+        title: "删除失败",
+        description: "删除公司时发生错误",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

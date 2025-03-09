@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderAnalysisItem {
   id: number;
@@ -56,7 +57,7 @@ export default function OrderAssignmentForm({ items, onClose, onSuccess }: Order
   useEffect(() => {
     const fetchSuppliers = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/suppliers/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.SUPPLIERS));
         const data = await response.json();
         setSuppliers(data);
       } catch (error) {
@@ -85,7 +86,7 @@ export default function OrderAssignmentForm({ items, onClose, onSuccess }: Order
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/order-analysis/assign', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

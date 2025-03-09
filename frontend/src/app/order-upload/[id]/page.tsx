@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderItem {
   id: number;
@@ -59,7 +60,7 @@ export default function UploadDetailPage() {
 
   const fetchUploadRecord = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/orders/upload/${id}`);
+      const response = await fetch(`api/v1/orders/upload/${id}`);
       if (!response.ok) {
         throw new Error('获取上传记录失败');
       }
@@ -105,7 +106,7 @@ export default function UploadDetailPage() {
 
     for (const orderId of orderIds) {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/orders/confirm/${orderId}`, {
+        const response = await fetch(`api/v1/orders/confirm/${orderId}`, {
           method: 'POST',
         });
         if (!response.ok) {

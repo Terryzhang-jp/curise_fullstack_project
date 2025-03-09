@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Category {
   id: number;
@@ -32,8 +33,8 @@ export default function CategoryForm({ category, onClose, onSuccess }: CategoryF
     e.preventDefault();
 
     const url = category
-      ? `http://localhost:8000/api/v1/categories/${category.id}`
-      : 'http://localhost:8000/api/v1/categories/';
+      ? `api/v1/categories/${category.id}`
+      : getApiUrl(API_ENDPOINTS.CATEGORIES);
 
     try {
       const response = await fetch(url, {

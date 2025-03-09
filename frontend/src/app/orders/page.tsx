@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Order {
   id: number;
@@ -135,7 +136,7 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/orders/?include_relations=true', {
+      const response = await fetch('api/v1/orders/?include_relations=true', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +161,7 @@ export default function OrdersPage() {
   // 获取船舶数据
   const fetchShips = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ships/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.SHIPS), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -186,7 +187,7 @@ export default function OrdersPage() {
   // 获取公司数据
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/companies/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COMPANIES), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +213,7 @@ export default function OrdersPage() {
   // 获取港口数据
   const fetchPorts = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ports/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.PORTS), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +239,7 @@ export default function OrdersPage() {
   // 获取产品数据
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/products/?limit=100', {
+      const response = await fetch('api/v1/products/?limit=100', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +265,7 @@ export default function OrdersPage() {
   // 获取供应商数据
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/suppliers/?limit=100', {
+      const response = await fetch('api/v1/suppliers/?limit=100', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -386,7 +387,7 @@ export default function OrdersPage() {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/orders/', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDERS), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -524,7 +525,7 @@ export default function OrdersPage() {
               }
               try {
                 const response = await fetch(
-                  `http://localhost:8000/api/v1/orders/${row.original.id}`,
+                  `api/v1/orders/${row.original.id}`,
                   {
                     method: 'DELETE',
                     headers: {

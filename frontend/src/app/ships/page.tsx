@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import ShipForm from './ShipForm';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Ship {
   id: number;
@@ -28,7 +29,7 @@ export default function ShipsPage() {
 
   const fetchShips = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ships/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.SHIPS));
       const data = await response.json();
       setShips(data);
     } catch (error) {
@@ -104,7 +105,7 @@ export default function ShipsPage() {
     if (!confirm('确定要删除这艘船舶吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/ships/${id}`, {
+      await fetch(`api/v1/ships/${id}`, {
         method: 'DELETE',
       });
       fetchShips();

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -30,8 +31,8 @@ export default function CountryForm({ country, onClose, onSuccess }: CountryForm
     e.preventDefault();
 
     const url = country
-      ? `http://localhost:8000/api/v1/countries/${country.id}`
-      : 'http://localhost:8000/api/v1/countries/';
+      ? `api/v1/countries/${country.id}`
+      : getApiUrl(API_ENDPOINTS.COUNTRIES);
 
     try {
       const response = await fetch(url, {

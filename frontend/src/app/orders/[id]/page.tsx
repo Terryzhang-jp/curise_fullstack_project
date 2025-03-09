@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderItem {
   id: number;
@@ -65,7 +66,7 @@ export default function OrderDetailPage() {
   const fetchOrder = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/orders/${params.id}`);
+      const response = await fetch(`api/v1/orders/${params.id}`);
       if (!response.ok) {
         throw new Error('获取订单详情失败');
       }
@@ -95,7 +96,7 @@ export default function OrderDetailPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/orders/${params.id}`, {
+      const response = await fetch(`api/v1/orders/${params.id}`, {
         method: 'DELETE',
       });
 
@@ -150,7 +151,7 @@ export default function OrderDetailPage() {
       console.log('Debug - itemIds:', itemIds);
       console.log('Debug - JSON body:', JSON.stringify(itemIds));
       
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/add-items', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

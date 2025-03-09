@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderAnalysis {
   id: number;
@@ -50,7 +51,7 @@ export default function UploadDetailPage({ params }: { params: { id: string } })
 
   const fetchUpload = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/order-analysis/${id}`);
+      const response = await fetch(`api/v1/order-analysis/${id}`);
       if (!response.ok) {
         throw new Error('获取上传信息失败');
       }

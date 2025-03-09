@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -37,7 +38,7 @@ export default function UploadPage() {
 
   const fetchCountries = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/countries/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
       if (!response.ok) {
         throw new Error('获取国家列表失败');
       }
@@ -51,7 +52,7 @@ export default function UploadPage() {
 
   const fetchShips = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/ships/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.SHIPS));
       if (!response.ok) {
         throw new Error('获取船舶列表失败');
       }
@@ -96,7 +97,7 @@ export default function UploadPage() {
     formData.append('ship_id', shipId);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/order-analysis/upload', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
         method: 'POST',
         body: formData,
       });

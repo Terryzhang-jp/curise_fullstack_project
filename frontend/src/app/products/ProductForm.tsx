@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Product, Category, Country, Supplier } from './types';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface ProductFormProps {
   product?: Product | null;
@@ -32,7 +33,7 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
     // 获取类别列表
     const fetchCategories = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/categories/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.CATEGORIES));
         const data = await response.json();
         setCategories(data);
         
@@ -48,7 +49,7 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
     // 获取国家列表
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/countries/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
         const data = await response.json();
         setCountries(data);
         
@@ -64,7 +65,7 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
     // 获取供应商列表
     const fetchSuppliers = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/suppliers/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.SUPPLIERS));
         const data = await response.json();
         setSuppliers(data);
       } catch (error) {
@@ -81,8 +82,8 @@ export default function ProductForm({ product, onClose, onSuccess }: ProductForm
     e.preventDefault();
 
     const url = product
-      ? `http://localhost:8000/api/v1/products/${product.id}`
-      : 'http://localhost:8000/api/v1/products/';
+      ? `api/v1/products/${product.id}`
+      : getApiUrl(API_ENDPOINTS.PRODUCTS);
 
     try {
       const response = await fetch(url, {

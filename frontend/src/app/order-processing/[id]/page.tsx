@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderItem {
   id: number;
@@ -59,7 +60,7 @@ export default function OrderProcessingDetailPage() {
   const fetchOrder = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/orders/${params.id}`);
+      const response = await fetch(`api/v1/orders/${params.id}`);
       if (!response.ok) {
         throw new Error('获取订单详情失败');
       }

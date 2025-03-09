@@ -7,6 +7,7 @@ import { PlusIcon, ArrowUpTrayIcon, MagnifyingGlassIcon, CheckCircleIcon, XMarkI
 import ProductForm from './ProductForm';
 import { Input } from '@/components/ui/input';
 import { Product, Category, Country, Supplier, TableRow } from './types';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface DuplicateInfo {
   type: 'name_country' | 'code';
@@ -64,7 +65,7 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       console.log('开始获取产品列表...');
-      const response = await fetch('http://localhost:8000/api/v1/products/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.PRODUCTS));
       console.log('API 响应状态:', response.status);
       
       if (!response.ok) {
@@ -115,7 +116,7 @@ export default function ProductsPage() {
 
   const fetchCountries = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/countries/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
       const data = await response.json();
       setCountries(data);
     } catch (error) {
@@ -125,7 +126,7 @@ export default function ProductsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/categories/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.CATEGORIES));
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -135,7 +136,7 @@ export default function ProductsPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/suppliers/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.SUPPLIERS));
       const data = await response.json();
       setSuppliers(data);
     } catch (error) {
@@ -145,7 +146,7 @@ export default function ProductsPage() {
 
   const fetchProductHistory = async (productId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/products/${productId}/history`);
+      const response = await fetch(`api/v1/products/${productId}/history`);
       const data = await response.json();
       setProductHistory(data);
     } catch (error) {
@@ -187,7 +188,7 @@ export default function ProductsPage() {
         return fetchProducts();
       }
       
-      const url = `http://localhost:8000/api/v1/products/search?${params.toString()}`;
+      const url = `api/v1/products/search?${params.toString()}`;
       console.log('发送请求到:', url);
       
       const response = await fetch(url);
@@ -226,7 +227,7 @@ export default function ProductsPage() {
     try {
       setIsLoading(true);
       const response = await fetch(
-        `http://localhost:8000/api/v1/products/check?order_by_code=true&ascending=${isAscending}`
+        `api/v1/products/check?order_by_code=true&ascending=${isAscending}`
       );
       const data = await response.json();
       console.log('检查返回的原始数据:', data);
@@ -291,7 +292,7 @@ export default function ProductsPage() {
     formData.append('supplier_id', supplierId.toString());
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/products/upload', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.PRODUCTS), {
         method: 'POST',
         body: formData,
       });
@@ -461,7 +462,7 @@ export default function ProductsPage() {
     if (!confirm('确定要删除这个产品吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/products/${id}`, {
+      await fetch(`api/v1/products/${id}`, {
         method: 'DELETE',
       });
       fetchProducts();

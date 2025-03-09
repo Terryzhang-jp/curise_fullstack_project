@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/ui/data-table';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import CategoryForm from './CategoryForm';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Category {
   id: number;
@@ -24,7 +25,7 @@ export default function CategoriesPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/categories/');
+      const response = await fetch(getApiUrl(API_ENDPOINTS.CATEGORIES));
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -96,7 +97,7 @@ export default function CategoriesPage() {
     if (!confirm('确定要删除这个类别吗？')) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/categories/${id}`, {
+      await fetch(`api/v1/categories/${id}`, {
         method: 'DELETE',
       });
       fetchCategories();

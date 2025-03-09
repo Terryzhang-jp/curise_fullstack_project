@@ -20,6 +20,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderItem {
   id: number;
@@ -313,7 +314,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 从API获取处理队列数据
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/items', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -369,7 +370,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API迁移本地数据到数据库
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/migrate-from-local', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -437,7 +438,7 @@ export default function OrderProcessingPage() {
       
       // 通过API将选中的项目标记为已处理
       const processPromises = selectedItems.map(itemId => 
-        fetch(`http://localhost:8000/api/v1/order-processing/items/${itemId}/process`, {
+        fetch(`api/v1/order-processing/items/${itemId}/process`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -483,7 +484,7 @@ export default function OrderProcessingPage() {
       
       // 通过API删除选中的订单项
       const deletePromises = selectedItems.map(itemId => 
-        fetch(`http://localhost:8000/api/v1/order-processing/items/${itemId}`, {
+        fetch(`api/v1/order-processing/items/${itemId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -523,7 +524,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API迁移测试数据到数据库
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/migrate-from-local', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -561,7 +562,7 @@ export default function OrderProcessingPage() {
       const token = localStorage.getItem('token');
       
       // 通过API清空处理队列
-      const response = await fetch('http://localhost:8000/api/v1/order-processing/clear', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-PROCESSING), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

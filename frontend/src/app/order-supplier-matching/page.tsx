@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Category {
   id: number;
@@ -201,7 +202,7 @@ export default function OrderSupplierMatchingPage() {
   const fetchSuppliers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/suppliers?status=true', {
+      const response = await fetch('api/v1/suppliers?status=true', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -264,7 +265,7 @@ export default function OrderSupplierMatchingPage() {
         
         const token = localStorage.getItem('token');
         
-        fetch('http://localhost:8000/api/v1/products/available-suppliers-by-code', {
+        fetch(getApiUrl(API_ENDPOINTS.PRODUCTS), {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -303,7 +304,7 @@ export default function OrderSupplierMatchingPage() {
       
       console.log('发送请求数据（产品代码）:', validProducts);
       
-      const response = await fetch('http://localhost:8000/api/v1/products/available-suppliers-by-code', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.PRODUCTS), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

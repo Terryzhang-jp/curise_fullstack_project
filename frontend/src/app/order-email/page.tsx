@@ -13,6 +13,7 @@ import { FileIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Supplier {
   id: number;
@@ -150,7 +151,7 @@ export default function OrderEmailPage() {
           throw new Error('未登录或会话已过期');
         }
         
-        const templateResponse = await fetch('http://localhost:8000/api/v1/email-templates', {
+        const templateResponse = await fetch(getApiUrl(API_ENDPOINTS.EMAIL-TEMPLATES), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -292,7 +293,7 @@ export default function OrderEmailPage() {
         formData.append('additional_attachments', attachment.file);
       });
 
-      const response = await fetch('http://localhost:8000/api/v1/orders/send-email', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDERS), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

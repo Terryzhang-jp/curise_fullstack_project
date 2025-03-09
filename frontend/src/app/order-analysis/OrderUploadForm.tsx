@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface Country {
   id: number;
@@ -38,7 +39,7 @@ export default function OrderUploadForm({ onClose, onSuccess }: OrderUploadFormP
     // 获取国家列表
     const fetchCountries = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/countries/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.COUNTRIES));
         const data = await response.json();
         setCountries(data);
         
@@ -54,7 +55,7 @@ export default function OrderUploadForm({ onClose, onSuccess }: OrderUploadFormP
     // 获取船舶列表
     const fetchShips = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/ships/');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.SHIPS));
         const data = await response.json();
         setShips(data);
         
@@ -85,7 +86,7 @@ export default function OrderUploadForm({ onClose, onSuccess }: OrderUploadFormP
     formDataToSend.append('ship_id', formData.ship_id.toString());
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/order-analysis/upload', {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.ORDER-ANALYSIS), {
         method: 'POST',
         body: formDataToSend,
       });
