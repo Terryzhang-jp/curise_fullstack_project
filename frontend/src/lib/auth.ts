@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { API_BASE_URL, API_ENDPOINTS, getApiUrl } from './api-config';
 
 // 用户角色类型
 export type UserRole = 'superadmin' | 'admin' | 'user';
@@ -48,7 +49,7 @@ const useAuthStore = create<AuthState>()(
           formData.append('username', email);
           formData.append('password', password);
 
-          const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+          const response = await fetch(getApiUrl(API_ENDPOINTS.LOGIN), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
@@ -103,9 +104,10 @@ const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true });
         try {
-          const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+          const response = await fetch(getApiUrl(API_ENDPOINTS.GET_USER), {
             headers: {
-              Authorization: `Bearer ${token}`,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
             },
           });
 

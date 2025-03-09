@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderStatistics {
   total_orders: number;
@@ -19,14 +20,9 @@ export default function OrderSummaryCard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStatistics = async () => {
+    async function fetchData() {
       try {
-        // 更新API端点路径
-        const response = await fetch('http://localhost:8000/api/v1/statistics');
-        if (!response.ok) {
-          throw new Error('获取统计数据失败');
-        }
-        
+        const response = await fetch(getApiUrl(API_ENDPOINTS.STATISTICS));
         const data = await response.json();
         console.log('Statistics data:', data);
         setStatistics(data);
@@ -35,9 +31,9 @@ export default function OrderSummaryCard() {
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchStatistics();
+    fetchData();
   }, []);
 
   if (loading) {

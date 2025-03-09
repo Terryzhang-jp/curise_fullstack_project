@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { getApiUrl, API_ENDPOINTS } from '@/lib/api-config';
 
 interface OrderOverview {
   id: number;
@@ -26,11 +27,11 @@ export default function OrderOverviewGrid() {
   const [hoveredOrderId, setHoveredOrderId] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    async function fetchData() {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/overview');
+        const response = await fetch(getApiUrl(API_ENDPOINTS.OVERVIEW));
         if (!response.ok) {
-          throw new Error('获取订单概览失败');
+          throw new Error('获取数据失败');
         }
         const data = await response.json();
         console.log('Orders overview data:', data);
@@ -40,9 +41,9 @@ export default function OrderOverviewGrid() {
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
-    fetchOrders();
+    fetchData();
   }, []);
 
   const getStatusColor = (status: string) => {

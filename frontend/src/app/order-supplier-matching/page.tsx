@@ -96,8 +96,8 @@ export default function OrderSupplierMatchingPage() {
     router.push('/order-categorization');
   };
 
-  const fetchData = async () => {
-    try {
+    const fetchData = async () => {
+      try {
       setLoading(true);
       setError(null);
       
@@ -345,16 +345,16 @@ export default function OrderSupplierMatchingPage() {
       }
       
       setProductSupplierMap(productSupplierMapping);
-    } catch (error) {
+      } catch (error) {
       console.error('获取供应商映射出错:', error);
       setError('无法获取供应商匹配数据');
       
       // 出错时设置空映射，避免界面报错
       setProductSupplierMap({});
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // 判断产品是否匹配特定供应商
   const isProductMatchedWithSupplier = (productCode: string | undefined, supplierId: number): boolean => {
@@ -471,14 +471,14 @@ export default function OrderSupplierMatchingPage() {
     try {
       // 保存所选供应商
       const selectedSuppliers = [selectedSupplier];
-      localStorage.setItem('selectedSuppliers', JSON.stringify(selectedSuppliers));
+    localStorage.setItem('selectedSuppliers', JSON.stringify(selectedSuppliers));
       
       // 保存所选产品项
       const selectedItems = processingItems.filter(item => selectedProductIds.includes(item.id));
       localStorage.setItem('processingItems', JSON.stringify(selectedItems));
       
       // 跳转到邮件页面
-      router.push('/order-email');
+    router.push('/order-email');
     } catch (error) {
       console.error('保存数据失败:', error);
       toast.error('准备邮件数据时出错，请重试');
@@ -506,21 +506,21 @@ export default function OrderSupplierMatchingPage() {
           </Button>
         </div>
       </div>
-      
+
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
+        <Card>
+          <CardHeader>
           <CardTitle>处理流程指南</CardTitle>
-        </CardHeader>
-        <CardContent>
+          </CardHeader>
+          <CardContent>
           <div className="text-sm text-muted-foreground mb-2">
             当前步骤：<span className="font-medium">供应商匹配（3/4）</span>
-          </div>
+                    </div>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li className="text-gray-500">订单项选择与批量处理（已完成）</li>
             <li className="text-gray-500">产品分类 - 按类别组织和查看产品（已完成）</li>
@@ -531,18 +531,18 @@ export default function OrderSupplierMatchingPage() {
             1. 点击左侧供应商，匹配的产品将会高亮显示
             <br />
             2. 选择需要的产品，然后点击"前往邮件页面"进入邮件发送页面
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* 供应商列表 */}
         <div className="md:col-span-1">
-          <Card>
-            <CardHeader>
+        <Card>
+          <CardHeader>
               <CardTitle>供应商列表</CardTitle>
-            </CardHeader>
-            <CardContent>
+          </CardHeader>
+          <CardContent>
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
                 {suppliers.length === 0 ? (
                   <div className="text-center text-muted-foreground py-4">
@@ -563,12 +563,12 @@ export default function OrderSupplierMatchingPage() {
                       <div className="text-sm opacity-80">{supplier.email || '无邮箱'}</div>
                     </div>
                   ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
         {/* 产品列表 */}
         <div className="md:col-span-3">
           <Card>
@@ -670,4 +670,4 @@ export default function OrderSupplierMatchingPage() {
       </div>
     </div>
   );
-}
+} 
