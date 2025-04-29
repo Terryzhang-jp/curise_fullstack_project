@@ -36,10 +36,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # 修改CORS配置，不要使用通配符
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],  # 添加端口3001
-    allow_credentials=True,  # 允许携带凭证
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://curise-fullstack-project-4umw.vercel.app",
+        "https://curise-fullstack-project.vercel.app",
+        "https://curise-db-frontend.vercel.app",
+        "https://curise-db-admin.vercel.app",
+        "https://curise-db-admin-frontend.vercel.app"
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # 添加路由检查端点
@@ -71,4 +81,4 @@ def init_data():
         # 初始化超级管理员账号
         init_superadmin(db)
     finally:
-        db.close() 
+        db.close()
