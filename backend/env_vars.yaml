@@ -1,0 +1,10 @@
+ENV: production
+SUPABASE_DB_URL: postgresql://postgres.xadqiqxwzkeygndcvexz:Qaz246567@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require
+SUPABASE_URL: https://xadqiqxwzkeygndcvexz.supabase.co
+SUPABASE_ANON_KEY: placeholder_key
+SECRET_KEY: pdT0M5o4lzSXK6ZxUQsaA2WDI9YjN3cF1hkLrVgwOPeJ
+FIRST_SUPERADMIN: admin@example.com
+FIRST_SUPERADMIN_PASSWORD: adminpassword
+FRONTEND_URL: https://curisedbfronted-rmcopkonz-terryzhang-jps-projects.vercel.app
+ALLOWED_ORIGINS: https://curisedbfronted-7btioeip0-terryzhang-jps-projects.vercel.app,https://curisedbfronted.vercel.app,https://curisedbfronted-rmcopkonz-terryzhang-jps-projects.vercel.app,http://localhost:3000
+LOG_LEVEL: INFO

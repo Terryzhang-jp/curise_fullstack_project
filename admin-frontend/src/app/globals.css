@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #0f172a;
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #94a3b8;
+  --chart-1: #e11d48;
+  --chart-2: #f59e0b;
+  --chart-3: #10b981;
+  --chart-4: #3b82f6;
+  --chart-5: #8b5cf6;
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --card: #0a0a0a;
+    --card-foreground: #ededed;
+    --popover: #0a0a0a;
+    --popover-foreground: #ededed;
+    --primary: #ededed;
+    --primary-foreground: #0a0a0a;
+    --secondary: #1e293b;
+    --secondary-foreground: #ededed;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #1e293b;
+    --accent-foreground: #ededed;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #ededed;
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #475569;
+    --chart-1: #dc2626;
+    --chart-2: #d97706;
+    --chart-3: #059669;
+    --chart-4: #2563eb;
+    --chart-5: #7c3aed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* 确保所有下拉框都有不透明的背景 */
+select {
+  background-color: white !important;
+  color: #1f2937 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  select {
+    background-color: #374151 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* 确保Radix UI Select组件的内容有不透明背景 */
+[data-radix-select-content] {
+  background-color: white !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-radix-select-content] {
+    background-color: #374151 !important;
+    color: #f9fafb !important;
+    border: 1px solid #4b5563 !important;
+  }
+}
+
+/* 确保下拉框选项有不透明背景 */
+[data-radix-select-item] {
+  background-color: transparent !important;
+}
+
+[data-radix-select-item]:hover,
+[data-radix-select-item][data-highlighted] {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-radix-select-item]:hover,
+  [data-radix-select-item][data-highlighted] {
+    background-color: #4b5563 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* 自定义滚动条样式 - 适用于Select下拉框 */
+[data-radix-select-viewport] {
+  /* 为Webkit浏览器（Chrome, Safari, Edge）自定义滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 3px;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 暗色模式下的滚动条样式 */
+@media (prefers-color-scheme: dark) {
+  [data-radix-select-viewport] {
+    scrollbar-color: #4b5563 #1f2937;
+  }
+
+  [data-radix-select-viewport]::-webkit-scrollbar-track {
+    background: #1f2937;
+  }
+
+  [data-radix-select-viewport]::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
+
+  [data-radix-select-viewport]::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+}

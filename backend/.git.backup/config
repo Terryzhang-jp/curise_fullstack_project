@@ -1,0 +1,16 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+[user]
+	name = Terryzhang-jp
+	email = yichuan.zhang.jp@gmail.com
+[remote "origin"]
+	url = https://github.com/Terryzhang-jp/curise_db_backend.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main

@@ -5,7 +5,7 @@ from datetime import datetime
 # 共享属性
 class CategoryBase(BaseModel):
     name: str
-    code: str
+    code: Optional[str] = None
     description: Optional[str] = None
     status: Optional[bool] = True
 

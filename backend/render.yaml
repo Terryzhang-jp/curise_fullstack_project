@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: cruise-system-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.7
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: PROJECT_NAME
+        value: Cruise System API
+      - key: BACKEND_CORS_ORIGINS
+        value: '["*"]'
+      - key: FIRST_SUPERUSER_EMAIL
+        sync: false
+      - key: FIRST_SUPERUSER_PASSWORD
+        sync: false
+      - key: SUPABASE_DB_URL
+        sync: false
+      - key: SMTP_TLS
+        value: "True"
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAILS_FROM_EMAIL
+        sync: false
+      - key: EMAILS_FROM_NAME
+        value: "Cruise System" 

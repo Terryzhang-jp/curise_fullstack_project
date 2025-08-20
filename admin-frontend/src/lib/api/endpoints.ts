@@ -1,0 +1,22 @@
+export const API_ENDPOINTS = {
+  AUTH: "/auth",
+  USERS: "/users",
+  DASHBOARD: "/dashboard",
+  PRODUCTS: "/products",
+  SUPPLIERS: "/suppliers",
+  ORDERS: "/orders",
+  SHIPS: "/ships",
+  COMPANIES: "/companies",
+  PORTS: "/ports",
+  COUNTRIES: "/countries",
+  CATEGORIES: "/categories",
+  EMAIL_TEMPLATES: "/email-templates",
+  CRUISE_ORDERS: "/cruise-orders",
+  PRODUCT_SUPPLIERS: "/product-suppliers",
+  FILE_UPLOAD: "/file-upload",
+  SYSTEM: "/system",
+  ORDER_UTILS: "/order-utils",
+  HEALTH: "/health",
+  // API v2 endpoints
+  EXCEL_V2: "/api/v2/excel",
+};

@@ -26,8 +26,14 @@ class CompanyUpdate(CompanyBase):
     status: Optional[bool] = None
 
 # API响应中的属性
-class Company(CompanyBase):
+class Company(BaseModel):
     id: int
+    name: str
+    country_id: Optional[int] = None  # 允许为None
+    contact: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    status: Optional[bool] = True
     created_at: datetime
     updated_at: datetime
     country: Optional[Country] = None

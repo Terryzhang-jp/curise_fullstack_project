@@ -1,0 +1,36 @@
+ # 虚拟环境
+venv/
+.venv/
+env/
+.env
+
+# Python缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 版本控制
+.git
+.gitignore
+
+# 测试和文档
+tests/
+docs/
+*.md
+
+# 临时文件
+*.log
+*.tmp
+.DS_Store
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 上传的文件和临时数据
+uploads/
+temp/

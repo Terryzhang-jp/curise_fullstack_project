@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, cast, Float
@@ -13,24 +13,26 @@ from decimal import Decimal
 
 from app import crud
 from app.api import deps
-from app.crud.crud_order_analysis import order_analysis
-from app.crud.crud_order_upload import order_upload
+# Disabled imports for deleted models:
+# from app.crud.crud_order_analysis import order_analysis  # OrderAnalysis models have been removed
+# from app.crud.crud_order_upload import order_upload  # OrderUpload models have been removed
 from app.crud.crud_order import order as crud_order
-from app.schemas.order_analysis import OrderAnalysis, OrderAnalysisItem
-from app.schemas.order_upload import OrderUpload
+# from app.schemas.order_analysis import OrderAnalysis, OrderAnalysisItem  # OrderAnalysis models have been removed
+# from app.schemas.order_upload import OrderUpload  # OrderUpload models have been removed
 from app.schemas.order import Order, OrderCreate, OrderItemBase, OrderItem
 from app.utils.excel import create_order_items_excel
-from app.models.models import OrderItem as OrderItemModel, Order as OrderModel, Product as ProductModel, NotificationHistory, Supplier
+from app.models.models import OrderItem as OrderItemModel, Order as OrderModel, Product as ProductModel, Supplier
+# NotificationHistory model has been removed
 from app.utils.email import send_email_with_attachments
 
 class PendingOrderResponse(BaseModel):
     id: int
     order_id: int
     order_no: str
-    ship_name: str | None = None
-    product_name: str | None = None
-    product_code: str | None = None
-    supplier_name: str | None = None
+    ship_name: Optional[str] = None
+    product_name: Optional[str] = None
+    product_code: Optional[str] = None
+    supplier_name: Optional[str] = None
     quantity: float
     price: float
     total: float
@@ -167,88 +169,90 @@ def delete_order(
             detail=f"删除订单失败: {str(e)}"
         )
 
-@router.post("/confirm/{order_id}")
-def confirm_order(
-    *,
-    db: Session = Depends(deps.get_db),
-    order_id: int
-):
-    """确认上传的订单"""
-    try:
-        order = order_upload.confirm_order(db, order_id=order_id)
-        if not order:
-            raise HTTPException(
-                status_code=404,
-                detail="找不到指定的订单"
-            )
-        return {"status": "success", "order_id": order.id}
-    except Exception as e:
-        print(f"API确认订单失败: {str(e)}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"确认订单失败: {str(e)}"
-        )
+# OrderUpload endpoints have been removed
+# @router.post("/confirm/{order_id}")
+# def confirm_order(
+#     *,
+#     db: Session = Depends(deps.get_db),
+#     order_id: int
+# ):
+#     """确认上传的订单"""
+#     try:
+#         order = order_upload.confirm_order(db, order_id=order_id)
+#         if not order:
+#             raise HTTPException(
+#                 status_code=404,
+#                 detail="找不到指定的订单"
+#             )
+#         return {"status": "success", "order_id": order.id}
+#     except Exception as e:
+#         print(f"API确认订单失败: {str(e)}")
+#         raise HTTPException(
+#             status_code=400,
+#             detail=f"确认订单失败: {str(e)}"
+#         )
 
-@router.post("/upload", response_model=OrderUpload)
-async def upload_order(
-    *,
-    db: Session = Depends(deps.get_db),
-    file: UploadFile = File(...),
-    country_id: int = Form(...),
-    ship_id: int = Form(...)
-):
-    """上传订单文件并解析"""
-    try:
-        # 确保上传目录存在
-        os.makedirs("uploads", exist_ok=True)
-        
-        # 保存文件
-        file_path = f"uploads/{file.filename}"
-        with open(file_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        
-        # 创建订单记录
-        result = order_upload.create_from_upload(
-            db,
-            file_path=file_path,
-            file_name=file.filename,
-            country_id=country_id,
-            ship_id=ship_id
-        )
-        
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        # 清理临时文件
-        if os.path.exists(file_path):
-            os.remove(file_path)
+# @router.post("/upload", response_model=OrderUpload)
+# async def upload_order(
+#     *,
+#     db: Session = Depends(deps.get_db),
+#     file: UploadFile = File(...),
+#     country_id: int = Form(...),
+#     ship_id: int = Form(...)
+# ):
+#     """上传订单文件并解析"""
+#     try:
+#         # 确保上传目录存在
+#         os.makedirs("uploads", exist_ok=True)
+#         
+#         # 保存文件
+#         file_path = f"uploads/{file.filename}"
+#         with open(file_path, "wb") as f:
+#             shutil.copyfileobj(file.file, f)
+#         
+#         # 创建订单记录
+#         result = order_upload.create_from_upload(
+#             db,
+#             file_path=file_path,
+#             file_name=file.filename,
+#             country_id=country_id,
+#             ship_id=ship_id
+#         )
+#         
+#         return result
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=str(e))
+#     finally:
+#         # 清理临时文件
+#         if os.path.exists(file_path):
+#             os.remove(file_path)
+# 
+# @router.get("/upload/{upload_id}", response_model=OrderUpload)
+# def get_upload_record(
+#     *,
+#     db: Session = Depends(deps.get_db),
+#     upload_id: int
+# ):
+#     """获取上传记录详情"""
+#     record = order_upload.get_with_details(db, id=upload_id)
+#     if not record:
+#         raise HTTPException(status_code=404, detail="上传记录不存在")
+#     return record
 
-@router.get("/upload/{upload_id}", response_model=OrderUpload)
-def get_upload_record(
-    *,
-    db: Session = Depends(deps.get_db),
-    upload_id: int
-):
-    """获取上传记录详情"""
-    record = order_upload.get_with_details(db, id=upload_id)
-    if not record:
-        raise HTTPException(status_code=404, detail="上传记录不存在")
-    return record
-
-@router.get("/analyses/{analysis_id}/items", response_model=List[OrderAnalysisItem])
-def get_analysis_items(
-    analysis_id: int,
-    category_id: Optional[int] = None,
-    db: Session = Depends(deps.get_db)
-):
-    """获取订单分析项目"""
-    items = order_analysis.get_items(
-        db,
-        analysis_id=analysis_id,
-        category_id=category_id
-    )
-    return items
+# OrderAnalysis endpoints have been removed
+# @router.get("/analyses/{analysis_id}/items", response_model=List[OrderAnalysisItem])
+# def get_analysis_items(
+#     analysis_id: int,
+#     category_id: Optional[int] = None,
+#     db: Session = Depends(deps.get_db)
+# ):
+#     """获取订单分析项目"""
+#     items = order_analysis.get_items(
+#         db,
+#         analysis_id=analysis_id,
+#         category_id=category_id
+#     )
+#     return items
 
 @router.get("/list/pending", response_model=List[PendingOrderResponse])
 def get_pending_orders(
@@ -270,7 +274,7 @@ def get_pending_orders(
                 joinedload(OrderItemModel.supplier),
                 joinedload(OrderItemModel.order).joinedload(OrderModel.ship)
             )
-            .filter(OrderItemModel.status == 'pending')
+            .filter(OrderItemModel.status == 'unprocessed')
             .order_by(OrderModel.order_no)
         )
         
@@ -286,7 +290,7 @@ def get_pending_orders(
                     order_id=item.order_id,
                     order_no=item.order.order_no if item.order else "",
                     ship_name=item.order.ship.name if item.order and item.order.ship else None,
-                    product_name=item.product.name if item.product else None,
+                    product_name=item.product.product_name_en if item.product else None,
                     product_code=item.product.code if item.product else None,
                     supplier_name=item.supplier.name if item.supplier else None,
                     quantity=float(item.quantity) if item.quantity else 0.0,
@@ -322,7 +326,7 @@ def process_order(
             raise HTTPException(status_code=404, detail="订单项目不存在")
             
         # 更新订单状态
-        item.status = "processing"
+        item.status = "processed"
         db.add(item)
         db.commit()
         
@@ -346,7 +350,7 @@ def remove_pending_order(
     try:
         item = db.query(OrderItemModel).filter(
             OrderItemModel.id == item_id,
-            OrderItemModel.status == 'pending'
+            OrderItemModel.status == 'unprocessed'
         ).first()
         
         if not item:
@@ -375,7 +379,7 @@ def remove_all_pending_orders(
     try:
         # 查询所有待处理订单项目
         items = db.query(OrderItemModel).filter(
-            OrderItemModel.status == 'pending'
+            OrderItemModel.status == 'unprocessed'
         ).all()
         
         if not items:
@@ -445,7 +449,7 @@ async def send_order_email(
 
         # 创建Excel文件
         excel_file = create_order_items_excel(order_items)
-        
+
         # 准备所有附件
         attachments = [
             {
@@ -454,6 +458,25 @@ async def send_order_email(
                 'content_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             }
         ]
+
+        # 添加BOX标签文件作为第二个附件
+        try:
+            import os
+            box_label_path = os.path.join(os.path.dirname(__file__), '../../../../ BOXラベル&Palletラベル(A4横).xlsx')
+            if os.path.exists(box_label_path):
+                with open(box_label_path, 'rb') as f:
+                    box_label_content = f.read()
+                attachments.append({
+                    'content': box_label_content,
+                    'filename': 'BOXラベル&Palletラベル(A4横).xlsx',
+                    'content_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                })
+                logger.info("已添加BOX标签文件作为附件")
+            else:
+                logger.warning(f"BOX标签文件不存在: {box_label_path}")
+        except Exception as e:
+            logger.error(f"添加BOX标签文件失败: {str(e)}")
+            # 不影响主流程，继续发送邮件
 
         # 添加额外的附件
         if additional_attachments:
@@ -475,13 +498,13 @@ async def send_order_email(
             bcc_list=bcc_emails
         )
 
-        # 记录通知历史
-        notification_history = NotificationHistory(
-            supplier_id=supplier.id,
-            subject=title,
-            content=content,
-        )
-        db.add(notification_history)
+        # NotificationHistory 功能已移除 - 以下代码已禁用
+        # notification_history = NotificationHistory(
+        #     supplier_id=supplier.id,
+        #     subject=title,
+        #     content=content,
+        # )
+        # db.add(notification_history)
         db.commit()
 
         return {
@@ -644,8 +667,11 @@ def create_order_item(
         db.commit()
         db.refresh(new_item)
         
-        # 更新订单总金额 - 修复类型不匹配问题
-        order.total_amount = float(Decimal(str(order.total_amount)) + Decimal(str(new_item.total)))
+        # 更新订单总金额
+        if order.total_amount is None:
+            order.total_amount = new_item.total
+        else:
+            order.total_amount = order.total_amount + new_item.total
         db.commit()
         
         logger.info(f"成功创建订单项目: id={new_item.id}")

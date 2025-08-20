@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 import logging
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.api.api_v2.api import api_router as api_v2_router
 from app.core.init_app import init_superadmin
 from app.db.session import SessionLocal
 
@@ -33,22 +34,25 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": str(exc.errors())}
     )
 
-# 修改CORS配置，不要使用通配符
+# CORS配置 - 动态配置
+allowed_origins = settings.get_allowed_origins
+use_wildcard = "*" in allowed_origins
+
+# 添加CORS调试信息
+logger = logging.getLogger(__name__)
+logger.info(f"🔧 CORS配置:")
+logger.info(f"  环境: {settings.ENV}")
+logger.info(f"  允许的源: {allowed_origins}")
+logger.info(f"  使用通配符: {use_wildcard}")
+logger.info(f"  允许凭证: {False if use_wildcard else True}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://curise-fullstack-project-4umw.vercel.app",
-        "https://curise-fullstack-project.vercel.app",
-        "https://curise-db-frontend.vercel.app",
-        "https://curise-db-admin.vercel.app",
-        "https://curise-db-admin-frontend.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
+    allow_origins=allowed_origins,
+    allow_credentials=False if use_wildcard else True,  # 使用通配符时必须设置为False
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"] if use_wildcard else ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+    expose_headers=["*"] if use_wildcard else ["Content-Type"],
     max_age=3600,
 )
 
@@ -66,6 +70,7 @@ async def list_routes():
 
 # 注册 API 路由
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_v2_router, prefix="/api/v2")
 
 @app.get("/")
 def read_root():

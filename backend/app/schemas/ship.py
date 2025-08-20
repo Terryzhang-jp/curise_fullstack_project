@@ -24,8 +24,13 @@ class ShipUpdate(ShipBase):
     status: Optional[bool] = None
 
 # API响应中的属性
-class Ship(ShipBase):
+class Ship(BaseModel):
     id: int
+    name: str
+    company_id: Optional[int] = None  # 允许为None
+    ship_type: Optional[str] = None
+    capacity: Optional[int] = 0
+    status: Optional[bool] = True
     created_at: datetime
     updated_at: datetime
     company: Optional[Company] = None

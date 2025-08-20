@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.email_template import EmailTemplate
+from app.models.models import EmailTemplate
 from app.schemas.email_template import EmailTemplateCreate, EmailTemplateUpdate
 
 def get_email_template(db: Session, template_id: int):

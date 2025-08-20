@@ -110,30 +110,19 @@ class CRUDSupplier(CRUDBase[Supplier, SupplierCreate, SupplierUpdate]):
             raise ValueError("供应商不存在")
         
         try:
-            # 删除现有的所有类别关联
-            db.execute(
-                text("DELETE FROM supplier_categories WHERE supplier_id = :supplier_id"),
-                {"supplier_id": supplier_id}
-            )
+            # 验证所有类别是否存在
+            categories = db.query(Category).filter(Category.id.in_(category_ids)).all()
+            if len(categories) != len(category_ids):
+                raise ValueError("某些类别不存在")
             
-            # 插入新的类别关联
-            for category_id in category_ids:
-                db.execute(
-                    text("""
-                        INSERT INTO supplier_categories (supplier_id, category_id, created_at)
-                        VALUES (:supplier_id, :category_id, CURRENT_TIMESTAMP)
-                        ON CONFLICT (supplier_id, category_id) DO NOTHING
-                    """),
-                    {
-                        "supplier_id": supplier_id,
-                        "category_id": category_id
-                    }
-                )
+            # 更新类别关联
+            supplier.categories = categories
             
+            db.add(supplier)
             db.commit()
+            db.refresh(supplier)
             
-            # 重新获取供应商信息，包括更新后的类别
-            return self.get(db, id=supplier_id)
+            return supplier
             
         except Exception as e:
             db.rollback()

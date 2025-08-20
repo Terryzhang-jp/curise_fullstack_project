@@ -1,0 +1,25 @@
+runtime: python312
+entrypoint: uvicorn app.main:app --host=0.0.0.0 --port=$PORT
+
+env_variables:
+  # 环境设置
+  ENV: "production"
+
+  # Supabase数据库配置
+  SUPABASE_DB_URL: "postgresql://postgres.xadqiqxwzkeygndcvexz:Qaz246567@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
+  SUPABASE_URL: "https://xadqiqxwzkeygndcvexz.supabase.co"
+  SUPABASE_ANON_KEY: "placeholder_key"
+
+  # JWT设置
+  SECRET_KEY: "pdT0M5o4lzSXK6ZxUQsaA2WDI9YjN3cF1hkLrVgwOPeJ"
+
+  # 超级管理员设置
+  FIRST_SUPERADMIN: "admin@example.com"
+  FIRST_SUPERADMIN_PASSWORD: "adminpassword"
+
+  # CORS配置
+  FRONTEND_URL: "https://curisedbfronted.vercel.app"
+  ALLOWED_ORIGINS: "https://curisedbfronted.vercel.app,https://curisedbfronted-terryzhang-jps-projects.vercel.app,https://curisedbfronted-qk6vhby5m-terryzhang-jps-projects.vercel.app,https://curisedbfronted-h8b2rwhqz-terryzhang-jps-projects.vercel.app,https://curisedbfronted-aetbxi22h-terryzhang-jps-projects.vercel.app,https://curisedbfronted-n873hhhmv-terryzhang-jps-projects.vercel.app"
+
+  # 日志级别
+  LOG_LEVEL: "INFO"

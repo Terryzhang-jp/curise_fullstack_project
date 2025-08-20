@@ -2,14 +2,14 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from app.core.config import settings
 
 async def send_email_with_attachments(
     to_email: str,
     subject: str,
     body: str,
-    attachments: List[Dict[str, bytes | str]],
+    attachments: List[Dict[str, Union[bytes, str]]],
     cc_list: Optional[List[str]] = None,
     bcc_list: Optional[List[str]] = None
 ) -> None:

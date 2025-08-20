@@ -28,8 +28,14 @@ class SupplierUpdate(SupplierBase):
     category_ids: Optional[List[int]] = None
 
 # API响应中的属性
-class Supplier(SupplierBase):
+class Supplier(BaseModel):
     id: int
+    name: str
+    country_id: Optional[int] = None  # 允许为None
+    contact: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    status: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     country: Optional[Country] = None
