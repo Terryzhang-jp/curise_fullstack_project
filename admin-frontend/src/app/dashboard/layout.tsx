@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -14,6 +14,14 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, isLoading, isInitialized, getCurrentUser } = useAuthStore();
+
+  // 侧边栏折叠状态管理
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // 切换侧边栏折叠状态
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
 
   // 认证检查
   useEffect(() => {
@@ -51,9 +59,9 @@ export default function DashboardLayout({
 
   return (
     <div className="flex flex-col h-screen">
-      <Header />
+      <Header onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar isCollapsed={isSidebarCollapsed} />
         <main className="flex-1 p-4 md:p-6 overflow-auto bg-background">
           {children}
         </main>

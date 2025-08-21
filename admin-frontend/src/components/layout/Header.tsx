@@ -3,9 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import useAuthStore from "@/lib/auth/authStore";
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+}
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
 
@@ -18,6 +23,18 @@ export default function Header() {
     <header className="sticky top-0 z-10 w-full bg-white border-b border-slate-200 shadow-sm">
       <div className="container flex items-center justify-between h-16 px-4 mx-auto">
         <div className="flex items-center space-x-4">
+          {/* 侧边栏折叠按钮 */}
+          {onToggleSidebar && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSidebar}
+              className="flex md:flex"
+              title="切换侧边栏"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          )}
           <Link href="/dashboard">
             <h1 className="text-xl font-bold">邮轮管理系统</h1>
           </Link>

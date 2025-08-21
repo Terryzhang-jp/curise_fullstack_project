@@ -12,6 +12,11 @@ type MenuItem = {
   roles?: string[];  // 允许访问的角色
 };
 
+// Sidebar组件props类型
+interface SidebarProps {
+  isCollapsed?: boolean;
+}
+
 // 菜单配置
 const menuItems: MenuItem[] = [
   {
@@ -88,7 +93,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
 
@@ -103,24 +108,47 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-primary text-primary-foreground hidden md:block">
+    <aside className={`min-h-screen bg-primary text-primary-foreground transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    } ${
+      // 移动端响应式：折叠时隐藏，展开时显示
+      isCollapsed ? 'hidden md:block' : 'block'
+    }`}>
+      {/* 标题区域 */}
       <div className="p-4">
-        <h2 className="text-xl font-bold">邮轮供应链管理</h2>
+        {isCollapsed ? (
+          <div className="flex justify-center">
+            <span className="text-xl font-bold">🚢</span>
+          </div>
+        ) : (
+          <h2 className="text-xl font-bold">邮轮供应链管理</h2>
+        )}
       </div>
+
+      {/* 导航菜单 */}
       <nav className="mt-6">
         <ul>
           {filteredMenuItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className={`flex items-center px-4 py-3 text-sm ${
+                className={`flex items-center px-4 py-3 text-sm transition-all duration-200 ${
                   isActive(item.href)
                     ? "bg-secondary text-secondary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
-                }`}
+                } ${isCollapsed ? 'justify-center' : ''}`}
+                title={isCollapsed ? item.title : undefined}
               >
-                {item.icon && <span className="mr-3">{item.icon}</span>}
-                {item.title}
+                {item.icon && (
+                  <span className={`transition-all duration-200 ${isCollapsed ? 'mx-auto' : 'mr-3'}`}>
+                    {item.icon}
+                  </span>
+                )}
+                {!isCollapsed && (
+                  <span className="transition-opacity duration-200 opacity-100">
+                    {item.title}
+                  </span>
+                )}
               </Link>
             </li>
           ))}
